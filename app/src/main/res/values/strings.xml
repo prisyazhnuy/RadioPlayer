@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">RadioPlayer</string>
+    <string name="station_name_label">Name:</string>
+    <string name="station_url_label">URL:</string>
 </resources>
