@@ -10,4 +10,6 @@ import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
 
 public interface StationPresenter extends MvpPresenter<StationExplorerView> {
     void loadStations();
+    void removeStation(long id);
+    void updatePosition(long id, int position);
 }

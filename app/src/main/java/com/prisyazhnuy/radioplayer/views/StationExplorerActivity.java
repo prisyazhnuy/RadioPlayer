@@ -4,6 +4,7 @@ import android.support.annotation.NonNull;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.widget.Toast;
 
 import com.hannesdorfmann.mosby3.mvp.MvpActivity;
@@ -38,11 +39,25 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
     @Override
     public void showStations(List<Station> stations) {
-        mRecyclerView.setAdapter(new StationAdapter(this, stations));
+        StationAdapter stationAdapter = new StationAdapter(this, getPresenter(), stations);
+        mRecyclerView.setAdapter(stationAdapter);
+        ItemTouchHelper.Callback callback = new SimpleTouchHelperCallback(stationAdapter);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(mRecyclerView);
     }
 
     @Override
     public void showEmptyList() {
         Toast.makeText(this, "There are no stations", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showDeleteResult() {
+        Toast.makeText(this, "Item was deleted", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showUpdateResult() {
+        Toast.makeText(this, "Item was updated", Toast.LENGTH_SHORT).show();
     }
 }

@@ -47,4 +47,24 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
                     }
                 });
     }
+
+    @Override
+    public void removeStation(long id) {
+        mDBService.delete(id, StationRealmModel.class).subscribe(new Action1<Long>() {
+            @Override
+            public void call(Long id) {
+                getView().showDeleteResult();
+            }
+        });
+    }
+
+    @Override
+    public void updatePosition(long id, int position) {
+        mDBService.update(id, position).subscribe(new Action1<Long>() {
+            @Override
+            public void call(Long aLong) {
+                getView().showUpdateResult();
+            }
+        });
+    }
 }

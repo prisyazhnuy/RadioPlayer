@@ -10,21 +10,25 @@ import android.widget.TextView;
 
 import com.prisyazhnuy.radioplayer.R;
 import com.prisyazhnuy.radioplayer.models.Station;
+import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
- * Created by Dell on 23.07.2017.
+ * Dell on 23.07.2017.
  */
 
-public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHolder> {
+public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHolder> implements ItemTouchHelperAdapter {
 
     private List<Station> mStations;
     private Context mContext;
+    private final StationPresenter mPresenter;
 
-    public StationAdapter(Context context, List<Station> items) {
+    public StationAdapter(Context context, StationPresenter presenter, List<Station> items) {
         this.mContext = context;
         this.mStations = items;
+        this.mPresenter = presenter;
     }
 
     @Override
@@ -47,6 +51,36 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         return mStations.size();
     }
 
+    @Override
+    public void onItemMove(int fromPosition, int toPosition) {
+        Station stationFrom = mStations.get(fromPosition);
+        mPresenter.updatePosition(stationFrom.getId(), toPosition);
+        Station stationTo = mStations.get(toPosition);
+        mPresenter.updatePosition(stationTo.getId(), fromPosition);
+
+
+
+        if (fromPosition < toPosition) {
+            for (int i = fromPosition; i < toPosition; i++) {
+                Collections.swap(mStations, i, i + 1);
+            }
+        } else {
+            for (int i = fromPosition; i > toPosition; i--) {
+                Collections.swap(mStations, i, i - 1);
+            }
+        }
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    @Override
+    public void onItemDismiss(int position) {
+        if (mPresenter != null) {
+            mPresenter.removeStation(mStations.get(position).getId());
+        }
+        mStations.remove(position);
+        notifyItemRemoved(position);
+    }
+
     class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tvName;
         private TextView tvUrl;
@@ -57,6 +91,11 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
             tvName = (TextView) itemView.findViewById(R.id.tvName);
             tvUrl = (TextView) itemView.findViewById(R.id.tvUrl);
             cbIsFavourite = (CheckBox) itemView.findViewById(R.id.cbIsFavourite);
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                }
+            });
         }
     }
 }

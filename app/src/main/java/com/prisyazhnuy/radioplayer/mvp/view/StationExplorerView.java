@@ -13,4 +13,8 @@ public interface StationExplorerView extends MvpView {
     void showStations(List<Station> stations);
 
     void showEmptyList();
+
+    void showDeleteResult();
+
+    void showUpdateResult();
 }
