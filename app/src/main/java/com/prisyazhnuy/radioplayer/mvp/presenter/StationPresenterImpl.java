@@ -11,8 +11,8 @@ import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.functions.Consumer;
 import io.realm.Realm;
-import rx.functions.Action1;
 
 /**
  * Created by Dell on 23.07.2017.
@@ -31,9 +31,9 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
     @Override
     public void loadStations() {
         mDBService.getAll(StationRealmModel.class)
-                .subscribe(new Action1<List<StationRealmModel>>() {
+                .subscribe(new Consumer<List<StationRealmModel>>() {
                     @Override
-                    public void call(List<StationRealmModel> stationRealmModels) {
+                    public void accept(List<StationRealmModel> stationRealmModels) throws Exception {
                         List<Station> stations = new ArrayList<>(stationRealmModels.size());
                         for (StationRealmModel model : stationRealmModels) {
                             stations.add(new Station(model.getId(), model.getName(),
@@ -50,19 +50,20 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void removeStation(long id) {
-        mDBService.delete(id, StationRealmModel.class).subscribe(new Action1<Long>() {
+        mDBService.delete(id, StationRealmModel.class).subscribe(new Consumer<Long>() {
             @Override
-            public void call(Long id) {
+            public void accept(Long aLong) throws Exception {
                 getView().showDeleteResult();
             }
         });
     }
 
     @Override
-    public void updatePosition(long id, int position) {
-        mDBService.update(id, position).subscribe(new Action1<Long>() {
+    public void updatePosition(List<Station> items) {
+//        mDBService.update(id, position).subscribe(new Action1<Long>() {
+        mDBService.updateList(items).subscribe(new Consumer<Station>() {
             @Override
-            public void call(Long aLong) {
+            public void accept(Station station) throws Exception {
                 getView().showUpdateResult();
             }
         });

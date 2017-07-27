@@ -1,7 +1,10 @@
 package com.prisyazhnuy.radioplayer.mvp.presenter;
 
 import com.hannesdorfmann.mosby3.mvp.MvpPresenter;
+import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
+
+import java.util.List;
 
 /**
  * Created by Dell on 23.07.2017.
@@ -11,5 +14,5 @@ import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
 public interface StationPresenter extends MvpPresenter<StationExplorerView> {
     void loadStations();
     void removeStation(long id);
-    void updatePosition(long id, int position);
+    void updatePosition(List<Station> items);
 }

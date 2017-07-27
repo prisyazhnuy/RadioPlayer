@@ -12,6 +12,7 @@ import com.prisyazhnuy.radioplayer.R;
 import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -54,9 +55,14 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     @Override
     public void onItemMove(int fromPosition, int toPosition) {
         Station stationFrom = mStations.get(fromPosition);
-        mPresenter.updatePosition(stationFrom.getId(), toPosition);
         Station stationTo = mStations.get(toPosition);
-        mPresenter.updatePosition(stationTo.getId(), fromPosition);
+        int posTmp = stationFrom.getPosition();
+        stationFrom.setPosition(stationTo.getPosition());
+        stationTo.setPosition(posTmp);
+        List<Station> items = new ArrayList<>(2);
+        items.add(stationFrom);
+        items.add(stationTo);
+        mPresenter.updatePosition(items);
 
 
 

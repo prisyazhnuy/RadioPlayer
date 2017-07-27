@@ -7,8 +7,8 @@ import com.prisyazhnuy.radioplayer.db.DBService;
 import com.prisyazhnuy.radioplayer.db.models.StationRealmModel;
 import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
 
+import io.reactivex.functions.Consumer;
 import io.realm.Realm;
-import rx.functions.Action1;
 
 /**
  * Created by Dell on 23.07.2017.
@@ -31,9 +31,9 @@ public class FillStationPresenterImpl extends MvpBasePresenter<FillDataView> imp
         model.setUrl(url);
         model.setFavourite(isFavorite);
         mDBService.save(model, StationRealmModel.class)
-                .subscribe(new Action1<StationRealmModel>() {
+                .subscribe(new Consumer<StationRealmModel>() {
                     @Override
-                    public void call(StationRealmModel stationRealmModel) {
+                    public void accept(StationRealmModel stationRealmModel) throws Exception {
                         getView().successData();
                     }
                 });
