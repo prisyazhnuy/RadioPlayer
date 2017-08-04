@@ -11,6 +11,8 @@ import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.realm.Realm;
 
@@ -22,6 +24,7 @@ import io.realm.Realm;
 public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> implements StationPresenter {
 
     private DBService mDBService;
+    private CompositeDisposable disposable = new CompositeDisposable();
 
     public StationPresenterImpl(Context context) {
         Realm.init(context);
@@ -30,7 +33,7 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void loadStations() {
-        mDBService.getAll(StationRealmModel.class)
+        Disposable subscribe = mDBService.getAll(StationRealmModel.class)
                 .subscribe(new Consumer<List<StationRealmModel>>() {
                     @Override
                     public void accept(List<StationRealmModel> stationRealmModels) throws Exception {
@@ -46,26 +49,39 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
                         }
                     }
                 });
+        disposable.add(subscribe);
     }
 
     @Override
     public void removeStation(long id) {
-        mDBService.delete(id, StationRealmModel.class).subscribe(new Consumer<Long>() {
+        Disposable subscribe = mDBService.delete(id, StationRealmModel.class).subscribe(new Consumer<Long>() {
             @Override
             public void accept(Long aLong) throws Exception {
                 getView().showDeleteResult();
             }
         });
+        disposable.add(subscribe);
     }
 
     @Override
     public void updatePosition(List<Station> items) {
 //        mDBService.update(id, position).subscribe(new Action1<Long>() {
-        mDBService.updateList(items).subscribe(new Consumer<Station>() {
+        Disposable subscribe = mDBService.updateList(items).subscribe(new Consumer<Station>() {
             @Override
             public void accept(Station station) throws Exception {
                 getView().showUpdateResult();
             }
         });
+        disposable.add(subscribe);
+    }
+
+    @Override
+    public void dispose() {
+        disposable.dispose();
+    }
+
+    @Override
+    public void stationClicked(Station station) {
+        getView().showEditStationDialog(station);
     }
 }

@@ -1,6 +1,7 @@
 package com.prisyazhnuy.radioplayer.mvp.presenter;
 
 import com.hannesdorfmann.mosby3.mvp.MvpPresenter;
+import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
 
 /**
@@ -10,4 +11,8 @@ import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
 
 public interface FillStationPresenter extends MvpPresenter<FillDataView> {
     void addStation(String name, String url, boolean isFavorite);
+
+    void fillStation(Station station);
+
+    void updateStation(Station station);
 }

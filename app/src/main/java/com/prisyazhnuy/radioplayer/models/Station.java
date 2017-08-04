@@ -1,11 +1,14 @@
 package com.prisyazhnuy.radioplayer.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Dell on 23.07.2017.
  *
  */
 
-public class Station {
+public class Station implements Parcelable {
     private long id;
     private String name;
     private String url;
@@ -19,6 +22,26 @@ public class Station {
         this.position = position;
         this.isFavourite = isFavourite;
     }
+
+    protected Station(Parcel in) {
+        id = in.readLong();
+        name = in.readString();
+        url = in.readString();
+        isFavourite = in.readByte() != 0;
+        position = in.readInt();
+    }
+
+    public static final Creator<Station> CREATOR = new Creator<Station>() {
+        @Override
+        public Station createFromParcel(Parcel in) {
+            return new Station(in);
+        }
+
+        @Override
+        public Station[] newArray(int size) {
+            return new Station[size];
+        }
+    };
 
     public int getPosition() {
         return position;
@@ -58,5 +81,19 @@ public class Station {
 
     public void setFavourite(boolean favourite) {
         isFavourite = favourite;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeLong(id);
+        dest.writeString(name);
+        dest.writeString(url);
+        dest.writeByte((byte) (isFavourite ? 1 : 0));
+        dest.writeInt(position);
     }
 }

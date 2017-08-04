@@ -6,7 +6,7 @@ import com.prisyazhnuy.radioplayer.models.Station;
 import java.util.List;
 
 /**
- * Created by Dell on 23.07.2017.
+ * Dell on 23.07.2017.
  */
 
 public interface StationExplorerView extends MvpView {
@@ -17,4 +17,6 @@ public interface StationExplorerView extends MvpView {
     void showDeleteResult();
 
     void showUpdateResult();
+
+    void showEditStationDialog(Station station);
 }

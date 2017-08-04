@@ -1,5 +1,6 @@
 package com.prisyazhnuy.radioplayer.views;
 
+import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -58,6 +59,19 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
     @Override
     public void showUpdateResult() {
-        Toast.makeText(this, "Item was updated", Toast.LENGTH_SHORT).show();
+//        Toast.makeText(this, "Item was updated", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showEditStationDialog(Station station) {
+        Intent editStation = new Intent(this, FillStationActivity.class);
+        editStation.putExtra("station", station);
+        startActivity(editStation);
+    }
+
+    @Override
+    protected void onStop() {
+        getPresenter().dispose();
+        super.onStop();
     }
 }

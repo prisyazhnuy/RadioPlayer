@@ -100,6 +100,9 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if (mPresenter != null) {
+                        mPresenter.stationClicked(mStations.get(getAdapterPosition()));
+                    }
                 }
             });
         }
