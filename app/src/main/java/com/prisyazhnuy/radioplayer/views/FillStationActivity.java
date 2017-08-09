@@ -11,11 +11,17 @@ import android.widget.Switch;
 import android.widget.Toast;
 
 import com.hannesdorfmann.mosby3.mvp.MvpActivity;
+import com.jakewharton.rxbinding2.widget.RxTextView;
 import com.prisyazhnuy.radioplayer.R;
 import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.presenter.FillStationPresenter;
 import com.prisyazhnuy.radioplayer.mvp.presenter.FillStationPresenterImpl;
 import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
+
+import io.reactivex.Observable;
+import io.reactivex.functions.BiFunction;
+import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 
 public class FillStationActivity extends MvpActivity<FillDataView, FillStationPresenter> implements FillDataView {
 
@@ -33,6 +39,47 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
         mEtUrl = (EditText) findViewById(R.id.etUrl);
         mSwhFavorite = (Switch) findViewById(R.id.swhFavorite);
         mBtnAdd = (Button) findViewById(R.id.btnAdd);
+
+        Observable<Boolean> name = RxTextView.textChanges(mEtName)
+                .map(new Function<CharSequence, String>() {
+                    @Override
+                    public String apply(CharSequence charSequence) throws Exception {
+                        return charSequence.toString().trim();
+                    }
+                })
+                .map(new Function<String, Boolean>() {
+                    @Override
+                    public Boolean apply(String charSequence) throws Exception {
+                        return charSequence.length() > 5;
+                    }
+                });
+
+        Observable<Boolean> url = RxTextView.textChanges(mEtUrl)
+                .map(new Function<CharSequence, String>() {
+                    @Override
+                    public String apply(CharSequence charSequence) throws Exception {
+                        return charSequence.toString().trim();
+                    }
+                })
+                .map(new Function<String, Boolean>() {
+                    @Override
+                    public Boolean apply(String charSequence) throws Exception {
+                        return charSequence.length() > 5;
+                    }
+                });
+
+        Observable.combineLatest(name, url, new BiFunction<Boolean, Boolean, Boolean>() {
+            @Override
+            public Boolean apply(Boolean aBoolean, Boolean aBoolean2) throws Exception {
+                return aBoolean && aBoolean2;
+            }
+        }).subscribe(new Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean aBoolean) throws Exception {
+                mBtnAdd.setEnabled(aBoolean);
+            }
+        });
+
         getStation();
     }
 
@@ -113,6 +160,7 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
     @Override
     public void successUpdate() {
         Toast.makeText(this, "Station was updated", Toast.LENGTH_SHORT).show();
+        setResult(RESULT_OK);
         finish();
     }
 }

@@ -19,6 +19,7 @@ import java.util.List;
 
 public class StationExplorerActivity extends MvpActivity<StationExplorerView, StationPresenter> implements StationExplorerView {
 
+    private static final int UPDATE_STATION_CODE = 1;
     private RecyclerView mRecyclerView;
 
     @Override
@@ -66,12 +67,24 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
     public void showEditStationDialog(Station station) {
         Intent editStation = new Intent(this, FillStationActivity.class);
         editStation.putExtra("station", station);
-        startActivity(editStation);
+        startActivityForResult(editStation, UPDATE_STATION_CODE);
     }
 
     @Override
-    protected void onStop() {
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK) {
+            switch (requestCode) {
+                case UPDATE_STATION_CODE:
+                    getPresenter().loadStations();
+                    break;
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onDestroy() {
         getPresenter().dispose();
-        super.onStop();
+        super.onDestroy();
     }
 }

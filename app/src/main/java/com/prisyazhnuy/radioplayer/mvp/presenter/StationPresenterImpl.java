@@ -1,24 +1,23 @@
 package com.prisyazhnuy.radioplayer.mvp.presenter;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.hannesdorfmann.mosby3.mvp.MvpBasePresenter;
 import com.prisyazhnuy.radioplayer.db.DBService;
-import com.prisyazhnuy.radioplayer.db.models.StationRealmModel;
 import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Action;
 import io.reactivex.functions.Consumer;
 import io.realm.Realm;
 
 /**
- * Created by Dell on 23.07.2017.
- *
+ * Dell on 23.07.2017.
  */
 
 public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> implements StationPresenter {
@@ -33,28 +32,36 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void loadStations() {
-        Disposable subscribe = mDBService.getAll(StationRealmModel.class)
-                .subscribe(new Consumer<List<StationRealmModel>>() {
+        Disposable subscribe = mDBService.getFavourite()
+                .subscribe(new Consumer<List<Station>>() {
                     @Override
-                    public void accept(List<StationRealmModel> stationRealmModels) throws Exception {
-                        List<Station> stations = new ArrayList<>(stationRealmModels.size());
-                        for (StationRealmModel model : stationRealmModels) {
-                            stations.add(new Station(model.getId(), model.getName(),
-                                    model.getUrl(), model.getPosition(), model.isFavourite()));
-                        }
+                    public void accept(List<Station> stations) throws Exception {
                         if (stations.isEmpty()) {
                             getView().showEmptyList();
                         } else {
                             getView().showStations(stations);
                         }
                     }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Log.e("DBService", "onError", throwable);
+                    }
+                }, new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        Log.d("DBService", "onComplete");
+                    }
                 });
+        Log.d("DBService", "isDesposed " + subscribe.isDisposed());
         disposable.add(subscribe);
+        Log.d("DBService", "isDesposed " + subscribe.isDisposed());
+
     }
 
     @Override
     public void removeStation(long id) {
-        Disposable subscribe = mDBService.delete(id, StationRealmModel.class).subscribe(new Consumer<Long>() {
+        Disposable subscribe = mDBService.deleteStation(id).subscribe(new Consumer<Long>() {
             @Override
             public void accept(Long aLong) throws Exception {
                 getView().showDeleteResult();
@@ -77,7 +84,8 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void dispose() {
-        disposable.dispose();
+       // disposable.dispose();
+        disposable.clear();
     }
 
     @Override

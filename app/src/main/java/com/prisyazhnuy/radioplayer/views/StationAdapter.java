@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.TextView;
 
 import com.prisyazhnuy.radioplayer.R;
@@ -15,6 +16,8 @@ import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import io.realm.internal.Collection;
 
 /**
  * Dell on 23.07.2017.
@@ -40,9 +43,17 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
         Station item = mStations.get(position);
         holder.cbIsFavourite.setChecked(item.isFavourite());
+        holder.cbIsFavourite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                Station station = mStations.get(holder.getAdapterPosition());
+                station.setFavourite(isChecked);
+                mPresenter.updatePosition(Collections.singletonList(station));
+            }
+        });
         holder.tvName.setText(item.getName());
         holder.tvUrl.setText(item.getUrl());
     }
@@ -63,8 +74,6 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         items.add(stationFrom);
         items.add(stationTo);
         mPresenter.updatePosition(items);
-
-
 
         if (fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {

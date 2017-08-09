@@ -8,13 +8,10 @@ import com.prisyazhnuy.radioplayer.db.models.StationRealmModel;
 import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 
 import io.reactivex.functions.Consumer;
 import io.realm.Realm;
-import io.realm.internal.Collection;
 
 /**
  * Created by Dell on 23.07.2017.
@@ -32,14 +29,15 @@ public class FillStationPresenterImpl extends MvpBasePresenter<FillDataView> imp
 
     @Override
     public void addStation(String name, String url, boolean isFavorite) {
-        StationRealmModel model = new StationRealmModel();
-        model.setName(name);
-        model.setUrl(url);
-        model.setFavourite(isFavorite);
-        mDBService.save(model, StationRealmModel.class)
-                .subscribe(new Consumer<StationRealmModel>() {
+        Station station = new Station(0, name, url, 0, isFavorite);
+//        StationRealmModel model = new StationRealmModel();
+//        model.setName(name);
+//        model.setUrl(url);
+//        model.setFavourite(isFavorite);
+        mDBService.saveStation(station)
+                .subscribe(new Consumer<Long>() {
                     @Override
-                    public void accept(StationRealmModel stationRealmModel) throws Exception {
+                    public void accept(Long id) throws Exception {
                         getView().successData();
                     }
                 });
