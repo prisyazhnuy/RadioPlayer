@@ -12,10 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".views.StationExplorerActivity" />
-        <activity android:name=".views.FillStationActivity" />
+        <activity android:name=".activities.StationExplorerActivity" />
+        <activity android:name=".activities.FillStationActivity" />
         <activity
-            android:name=".views.MainActivity"
+            android:name=".activities.MainActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>

@@ -1,4 +1,4 @@
-package com.prisyazhnuy.radioplayer.views;
+package com.prisyazhnuy.radioplayer.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -16,8 +16,6 @@ import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import io.realm.internal.Collection;
 
 /**
  * Dell on 23.07.2017.

@@ -1,4 +1,4 @@
-package com.prisyazhnuy.radioplayer.views;
+package com.prisyazhnuy.radioplayer.activities;
 
 import android.app.ActionBar;
 import android.content.Intent;

@@ -1,4 +1,4 @@
-package com.prisyazhnuy.radioplayer.views;
+package com.prisyazhnuy.radioplayer.activities;
 
 import android.content.Intent;
 import android.support.annotation.NonNull;
@@ -6,10 +6,14 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.Toast;
 
 import com.hannesdorfmann.mosby3.mvp.MvpActivity;
 import com.prisyazhnuy.radioplayer.R;
+import com.prisyazhnuy.radioplayer.adapters.SimpleTouchHelperCallback;
+import com.prisyazhnuy.radioplayer.adapters.StationAdapter;
 import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenterImpl;
@@ -31,6 +35,23 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
         getPresenter().loadStations();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.station_explorer_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_add_station) {
+            startActivityForResult(new Intent(this, FillStationActivity.class), UPDATE_STATION_CODE);
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @NonNull

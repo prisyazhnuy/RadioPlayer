@@ -4,6 +4,6 @@
     android:id="@+id/rvStations"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.prisyazhnuy.radioplayer.views.StationExplorerActivity">
+    tools:context="com.prisyazhnuy.radioplayer.activities.StationExplorerActivity">
 
 </android.support.v7.widget.RecyclerView>

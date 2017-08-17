@@ -32,7 +32,7 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void loadStations() {
-        Disposable subscribe = mDBService.getFavourite()
+        Disposable subscribe = mDBService.getAll()
                 .subscribe(new Consumer<List<Station>>() {
                     @Override
                     public void accept(List<Station> stations) throws Exception {

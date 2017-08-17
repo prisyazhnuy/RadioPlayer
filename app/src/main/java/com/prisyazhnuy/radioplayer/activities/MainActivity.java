@@ -1,9 +1,11 @@
-package com.prisyazhnuy.radioplayer.views;
+package com.prisyazhnuy.radioplayer.activities;
 
 import android.content.ComponentName;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -16,10 +18,13 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 
 import com.prisyazhnuy.radioplayer.R;
 import com.prisyazhnuy.radioplayer.services.BackgroundAudioService;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -40,7 +45,7 @@ public class MainActivity extends AppCompatActivity
                 MediaControllerCompat.setMediaController(MainActivity.this, mediaControllerCompat);
                 Uri uri = Uri.parse("http://cast.nrj.in.ua/nrj");
                 MediaControllerCompat.getMediaController(MainActivity.this)
-                        .getTransportControls().playFromUri(uri, null);//MediaId(String.valueOf(R.raw.imagine_dragons_thunder), null);
+                        .getTransportControls().playFromMediaId("0", null);//MediaId(String.valueOf(R.raw.imagine_dragons_thunder), null);
 
             } catch (RemoteException e) {
                 e.printStackTrace();
@@ -72,12 +77,12 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
-        if (MediaControllerCompat.getMediaController(this).getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
-            MediaControllerCompat.getMediaController(this).getTransportControls().pause();
-        }
+//        if (MediaControllerCompat.getMediaController(this).getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
+//            MediaControllerCompat.getMediaController(this).getTransportControls().pause();
+//        }
 
         mediaBrowserCompat.disconnect();
+        super.onDestroy();
     }
 
     @Override
@@ -102,6 +107,13 @@ public class MainActivity extends AppCompatActivity
         mediaBrowserCompat = new MediaBrowserCompat(this, new ComponentName(this, BackgroundAudioService.class),
                 connectionCallback, getIntent().getExtras());
         mediaBrowserCompat.connect();
+//        mediaBrowserCompat.subscribe(mediaBrowserCompat.getRoot(), new MediaBrowserCompat.SubscriptionCallback() {
+//                    @Override
+//                    public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
+//                        super.onChildrenLoaded(parentId, children);
+//                    }
+//                }
+//        );
 
         btnPlay.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -111,11 +123,18 @@ public class MainActivity extends AppCompatActivity
                     currentState = STATE_PLAYING;
                 } else {
                     if (MediaControllerCompat.getMediaController(MainActivity.this).getPlaybackState().getState() == PlaybackStateCompat.STATE_PLAYING) {
-                        MediaControllerCompat.getMediaController(MainActivity.this).getTransportControls().pause();
+                        MediaControllerCompat.getMediaController(MainActivity.this).getTransportControls().stop();
                     }
 
                     currentState = STATE_PAUSED;
                 }
+            }
+        });
+        ImageButton btnNext = (ImageButton) findViewById(R.id.btnNext);
+        btnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaControllerCompat.getMediaController(MainActivity.this).getTransportControls().skipToNext();
             }
         });
 
@@ -156,23 +175,15 @@ public class MainActivity extends AppCompatActivity
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
         int id = item.getItemId();
-
-        if (id == R.id.nav_camera) {
-            // Handle the camera action
-        } else if (id == R.id.nav_gallery) {
-
-        } else if (id == R.id.nav_slideshow) {
-
-        } else if (id == R.id.nav_manage) {
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+        switch (id) {
+            case R.id.nav_radio:
+                break;
+            case R.id.nav_station_manager:
+                Intent stationExplorer = new Intent(this, StationExplorerActivity.class);
+                startActivity(stationExplorer);
+                break;
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

@@ -1,4 +1,4 @@
-package com.prisyazhnuy.radioplayer.views;
+package com.prisyazhnuy.radioplayer.adapters;
 
 /**
  * Dell on 26.07.2017.
