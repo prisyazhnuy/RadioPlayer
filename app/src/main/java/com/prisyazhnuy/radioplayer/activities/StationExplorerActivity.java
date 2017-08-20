@@ -34,7 +34,7 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
         mRecyclerView = (RecyclerView) findViewById(R.id.rvStations);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
-        getPresenter().loadStations();
+        getPresenter().loadAllStations();
     }
 
     @Override
@@ -96,7 +96,7 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
         if (resultCode == RESULT_OK) {
             switch (requestCode) {
                 case UPDATE_STATION_CODE:
-                    getPresenter().loadStations();
+                    getPresenter().loadAllStations();
                     break;
             }
         }

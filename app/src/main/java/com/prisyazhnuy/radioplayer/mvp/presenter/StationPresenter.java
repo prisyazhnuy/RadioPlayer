@@ -12,7 +12,10 @@ import java.util.List;
  */
 
 public interface StationPresenter extends MvpPresenter<StationExplorerView> {
-    void loadStations();
+    void loadAllStations();
+
+    void loadFavouriteStations();
+
     void removeStation(long id);
     void updatePosition(List<Station> items);
     void dispose();

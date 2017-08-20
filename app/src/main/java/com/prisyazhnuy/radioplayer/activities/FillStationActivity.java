@@ -155,6 +155,7 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
                 }
             });
         }
+        setResult(RESULT_OK);
     }
 
     @Override

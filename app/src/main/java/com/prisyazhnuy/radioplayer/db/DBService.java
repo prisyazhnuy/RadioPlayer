@@ -132,7 +132,8 @@ public class DBService {
                 Log.d("DBService", "thread: " + Thread.currentThread());
                 Realm realm = Realm.getInstance(mConfig);
                 realm.beginTransaction();
-                RealmResults<StationRealmModel> stationsModels = realm.where(StationRealmModel.class).findAllSorted("position", Sort.DESCENDING);
+                RealmResults<StationRealmModel> stationsModels = realm.where(StationRealmModel.class)
+                        .findAllSorted("position", Sort.DESCENDING);
                 List<Station> stations = new ArrayList<>(stationsModels.size());
                 for (StationRealmModel model : stationsModels) {
                     stations.add(new Station(model.getId(), model.getName(),

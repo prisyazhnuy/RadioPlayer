@@ -31,7 +31,36 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
     }
 
     @Override
-    public void loadStations() {
+    public void loadAllStations() {
+        Disposable subscribe = mDBService.getAll()
+                .subscribe(new Consumer<List<Station>>() {
+                    @Override
+                    public void accept(List<Station> stations) throws Exception {
+                        if (stations.isEmpty()) {
+                            getView().showEmptyList();
+                        } else {
+                            getView().showStations(stations);
+                        }
+                    }
+                }, new Consumer<Throwable>() {
+                    @Override
+                    public void accept(Throwable throwable) throws Exception {
+                        Log.e("DBService", "onError", throwable);
+                    }
+                }, new Action() {
+                    @Override
+                    public void run() throws Exception {
+                        Log.d("DBService", "onComplete");
+                    }
+                });
+        Log.d("DBService", "isDesposed " + subscribe.isDisposed());
+        disposable.add(subscribe);
+        Log.d("DBService", "isDesposed " + subscribe.isDisposed());
+
+    }
+
+    @Override
+    public void loadFavouriteStations() {
         Disposable subscribe = mDBService.getAll()
                 .subscribe(new Consumer<List<Station>>() {
                     @Override
