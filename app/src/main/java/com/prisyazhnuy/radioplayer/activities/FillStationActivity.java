@@ -27,6 +27,7 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
 
     private EditText mEtName;
     private EditText mEtUrl;
+    private EditText mEtSubname;
     private Switch mSwhFavorite;
     private Button mBtnAdd;
 
@@ -36,6 +37,7 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
         setContentView(R.layout.activity_fill_station);
 
         mEtName = (EditText) findViewById(R.id.etName);
+        mEtSubname = (EditText) findViewById(R.id.etSubName);
         mEtUrl = (EditText) findViewById(R.id.etUrl);
         mSwhFavorite = (Switch) findViewById(R.id.swhFavorite);
         mBtnAdd = (Button) findViewById(R.id.btnAdd);
@@ -102,6 +104,7 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
         mSwhFavorite.setChecked(false);
         mEtName.setText("");
         mEtUrl.setText("");
+        mEtSubname.setText("");
         Toast.makeText(this, "Station was added", Toast.LENGTH_SHORT).show();
     }
 
@@ -114,22 +117,26 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
     public void showStation(final Station station) {
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
-            actionBar.setTitle("Edit station");
+            actionBar.setTitle(R.string.toolbar_edit_station);
         }
         if (mBtnAdd != null) {
-            mBtnAdd.setText("Update");
+            mBtnAdd.setText(R.string.btn_update);
             mBtnAdd.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     station.setName(mEtName.getText().toString());
                     station.setUrl(mEtUrl.getText().toString());
                     station.setFavourite(mSwhFavorite.isChecked());
+                    station.setSubname(mEtSubname.getText().toString());
                     getPresenter().updateStation(station);
                 }
             });
         }
         if (mEtName != null) {
             mEtName.setText(station.getName());
+        }
+        if (mEtSubname != null) {
+            mEtSubname.setText(station.getSubname());
         }
         if (mEtUrl != null) {
             mEtUrl.setText(station.getUrl());
@@ -143,14 +150,14 @@ public class FillStationActivity extends MvpActivity<FillDataView, FillStationPr
     public void createStation() {
         ActionBar actionBar = getActionBar();
         if (actionBar != null) {
-            actionBar.setTitle("Create station");
+            actionBar.setTitle(R.string.toolbar_create_station);
         }
         if (mBtnAdd != null) {
-            mBtnAdd.setText("Add");
+            mBtnAdd.setText(R.string.btn_add);
             mBtnAdd.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    getPresenter().addStation(mEtName.getText().toString(),
+                    getPresenter().addStation(mEtName.getText().toString(), mEtSubname.getText().toString(),
                             mEtUrl.getText().toString(), mSwhFavorite.isChecked());
                 }
             });

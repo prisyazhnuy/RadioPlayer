@@ -14,4 +14,9 @@
     <string name="play_pause">play or pause</string>
     <string name="currently_playing_song">Song currently playing</string>
     <string name="currently_playing_artist">Artist of currently playing song</string>
+    <string name="station_subname_label">Subname</string>
+    <string name="btn_update">Update</string>
+    <string name="toolbar_edit_station">Edit station</string>
+    <string name="btn_add">Add</string>
+    <string name="toolbar_create_station">Create station</string>
 </resources>

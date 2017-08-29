@@ -25,8 +25,7 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
                 @Override
                 public void onPlayFromMediaId(String mediaId, Bundle extras) {
                     mSession.setActive(true);
-                    MediaMetadataCompat metadata =
-                            mMusicLibrary.getMetadata(BackgroundAudioService.this, Long.valueOf(mediaId));
+                    MediaMetadataCompat metadata = mMusicLibrary.getMetadata(BackgroundAudioService.this, Long.valueOf(mediaId));
                     mSession.setMetadata(metadata);
                     try {
                         mPlayback.play(metadata);

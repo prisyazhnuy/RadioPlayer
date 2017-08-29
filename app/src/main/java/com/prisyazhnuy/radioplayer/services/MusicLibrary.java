@@ -82,7 +82,7 @@ public class MusicLibrary {
             @Override
             public void accept(List<Station> stations) throws Exception {
                 for (Station station : stations) {
-                    createMediaMetadataCompat(station.getId(), station.getName(), station.getUrl(),
+                    createMediaMetadataCompat(station.getId(), station.getName(), station.getSubname(),
                             "", "", 0, station.getUrl(), 0, "");
                 }
             }
@@ -206,12 +206,8 @@ public class MusicLibrary {
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                         .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration * 1000)
                         .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
-                        .putString(
-                                MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI,
-                                getAlbumArtUri(albumArtResName))
-                        .putString(
-                                MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI,
-                                getAlbumArtUri(albumArtResName))
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, getAlbumArtUri(albumArtResName))
+                        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, getAlbumArtUri(albumArtResName))
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         .build());
         albumRes.put(mediaId, albumArtResId);

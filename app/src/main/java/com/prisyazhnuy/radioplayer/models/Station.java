@@ -11,13 +11,15 @@ import android.os.Parcelable;
 public class Station implements Parcelable {
     private long id;
     private String name;
+    private String subname;
     private String url;
     private boolean isFavourite;
     private int position;
 
-    public Station(long id, String name, String url, int position, boolean isFavourite) {
+    public Station(long id, String name, String subname, String url, int position, boolean isFavourite) {
         this.id = id;
         this.name = name;
+        this.subname = subname;
         this.url = url;
         this.position = position;
         this.isFavourite = isFavourite;
@@ -26,6 +28,7 @@ public class Station implements Parcelable {
     protected Station(Parcel in) {
         id = in.readLong();
         name = in.readString();
+        subname = in.readString();
         url = in.readString();
         isFavourite = in.readByte() != 0;
         position = in.readInt();
@@ -42,6 +45,14 @@ public class Station implements Parcelable {
             return new Station[size];
         }
     };
+
+    public String getSubname() {
+        return subname;
+    }
+
+    public void setSubname(String subname) {
+        this.subname = subname;
+    }
 
     public int getPosition() {
         return position;
@@ -92,6 +103,7 @@ public class Station implements Parcelable {
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeLong(id);
         dest.writeString(name);
+        dest.writeString(subname);
         dest.writeString(url);
         dest.writeByte((byte) (isFavourite ? 1 : 0));
         dest.writeInt(position);

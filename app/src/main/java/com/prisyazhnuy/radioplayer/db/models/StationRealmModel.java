@@ -13,6 +13,7 @@ public class StationRealmModel extends RealmObject {
     @PrimaryKey
     private long id;
     private String name;
+    private String subname;
     private boolean isFavourite;
     private int position = -1;
     private String url;
@@ -23,6 +24,14 @@ public class StationRealmModel extends RealmObject {
 
     public void setId(long id) {
         this.id = id;
+    }
+
+    public String getSubname() {
+        return subname;
+    }
+
+    public void setSubname(String subname) {
+        this.subname = subname;
     }
 
     public String getName() {

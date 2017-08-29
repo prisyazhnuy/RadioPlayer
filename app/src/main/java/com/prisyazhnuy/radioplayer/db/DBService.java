@@ -1,6 +1,5 @@
 package com.prisyazhnuy.radioplayer.db;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.prisyazhnuy.radioplayer.db.migration.Migration;
@@ -15,14 +14,10 @@ import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
 import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Action;
-import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
-import io.realm.RealmObject;
 import io.realm.RealmResults;
 import io.realm.Sort;
 
@@ -32,7 +27,7 @@ import io.realm.Sort;
 
 public class DBService {
     private RealmConfiguration mConfig = new RealmConfiguration.Builder()
-            .schemaVersion(1)
+            .schemaVersion(2)
             .migration(new Migration())
             .build();
 
@@ -74,6 +69,7 @@ public class DBService {
                                             model.setPosition(station.getPosition());
                                             model.setUrl(station.getUrl());
                                             model.setName(station.getName());
+                                            model.setSubname(station.getSubname());
                                         }
                                         realm.commitTransaction();
                                         realm.close();
@@ -96,6 +92,7 @@ public class DBService {
                         model.setName(station.getName());
                         model.setUrl(station.getUrl());
                         model.setPosition(station.getPosition());
+                        model.setSubname(station.getSubname());
                         return Observable.just(model);
                     }
                 })
@@ -136,7 +133,7 @@ public class DBService {
                         .findAllSorted("position", Sort.DESCENDING);
                 List<Station> stations = new ArrayList<>(stationsModels.size());
                 for (StationRealmModel model : stationsModels) {
-                    stations.add(new Station(model.getId(), model.getName(),
+                    stations.add(new Station(model.getId(), model.getName(), model.getSubname(),
                             model.getUrl(), model.getPosition(), model.isFavourite()));
                 }
                 realm.commitTransaction();
@@ -163,7 +160,7 @@ public class DBService {
                         .findAllSorted("position", Sort.DESCENDING);
                 List<Station> stations = new ArrayList<>(stationsModels.size());
                 for (StationRealmModel model : stationsModels) {
-                    stations.add(new Station(model.getId(), model.getName(),
+                    stations.add(new Station(model.getId(), model.getName(), model.getSubname(),
                             model.getUrl(), model.getPosition(), model.isFavourite()));
                 }
                 realm.commitTransaction();

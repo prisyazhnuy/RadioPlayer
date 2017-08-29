@@ -160,12 +160,10 @@ public class MediaNotificationManager extends BroadcastReceiver {
         MediaDescriptionCompat description = metadata.getDescription();
 
         notificationBuilder
-                .setStyle(
-                        new NotificationCompat.MediaStyle()
+                .setStyle(new NotificationCompat.MediaStyle()
                                 .setMediaSession(token)
                                 .setShowActionsInCompactView(0, 1, 2))
-                .setColor(
-                        mService.getApplication().getResources().getColor(R.color.notification_bg))
+                .setColor(mService.getApplication().getResources().getColor(R.color.notification_bg))
                 .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .setContentIntent(createContentIntent())
@@ -183,6 +181,12 @@ public class MediaNotificationManager extends BroadcastReceiver {
         }
 
         notificationBuilder.addAction(isPlaying ? mPauseAction : mPlayAction);
+        String pkg = mService.getPackageName();
+        notificationBuilder.setDeleteIntent(PendingIntent.getBroadcast(
+                mService,
+                REQUEST_CODE,
+                new Intent(ACTION_STOP).setPackage(pkg),
+                PendingIntent.FLAG_CANCEL_CURRENT));
 
         // If skip to prev action is enabled
         if ((state.getActions() & PlaybackStateCompat.ACTION_SKIP_TO_NEXT) != 0) {

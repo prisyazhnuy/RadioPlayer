@@ -4,7 +4,6 @@ import android.content.Context;
 
 import com.hannesdorfmann.mosby3.mvp.MvpBasePresenter;
 import com.prisyazhnuy.radioplayer.db.DBService;
-import com.prisyazhnuy.radioplayer.db.models.StationRealmModel;
 import com.prisyazhnuy.radioplayer.models.Station;
 import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
 
@@ -28,8 +27,8 @@ public class FillStationPresenterImpl extends MvpBasePresenter<FillDataView> imp
     }
 
     @Override
-    public void addStation(String name, String url, boolean isFavorite) {
-        Station station = new Station(0, name, url, 0, isFavorite);
+    public void addStation(String name, String subname, String url, boolean isFavorite) {
+        Station station = new Station(0, name, subname, url, 0, isFavorite);
 //        StationRealmModel model = new StationRealmModel();
 //        model.setName(name);
 //        model.setUrl(url);

@@ -10,7 +10,7 @@ import com.prisyazhnuy.radioplayer.mvp.view.FillDataView;
  */
 
 public interface FillStationPresenter extends MvpPresenter<FillDataView> {
-    void addStation(String name, String url, boolean isFavorite);
+    void addStation(String name, String subname, String url, boolean isFavorite);
 
     void fillStation(Station station);
 

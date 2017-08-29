@@ -53,7 +53,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
             }
         });
         holder.tvName.setText(item.getName());
-        holder.tvUrl.setText(item.getUrl());
+        holder.tvSubName.setText(item.getSubname());
     }
 
     @Override
@@ -96,13 +96,13 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
 
     class ViewHolder extends RecyclerView.ViewHolder {
         private TextView tvName;
-        private TextView tvUrl;
+        private TextView tvSubName;
         private CheckBox cbIsFavourite;
 
         ViewHolder(View itemView) {
             super(itemView);
             tvName = (TextView) itemView.findViewById(R.id.tvName);
-            tvUrl = (TextView) itemView.findViewById(R.id.tvUrl);
+            tvSubName = (TextView) itemView.findViewById(R.id.tvUrl);
             cbIsFavourite = (CheckBox) itemView.findViewById(R.id.cbIsFavourite);
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override

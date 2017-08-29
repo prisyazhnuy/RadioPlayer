@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.media.session.PlaybackState;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
@@ -19,13 +18,11 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -44,6 +41,8 @@ public class MainActivity extends AppCompatActivity
 
     private BrowseAdapter mBrowserAdapter;
     private ImageButton mPlayPause;
+    private ImageButton mBtnPrev;
+    private ImageButton mBtnNext;
     private TextView mTitle;
     private TextView mSubtitle;
     private ImageView mAlbumArt;
@@ -155,6 +154,26 @@ public class MainActivity extends AppCompatActivity
         mPlayPause.setEnabled(true);
         mPlayPause.setOnClickListener(mPlaybackButtonListener);
 
+        mBtnNext = (ImageButton) findViewById(R.id.btnNext);
+        mBtnNext.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaControllerCompat.getMediaController(MainActivity.this)
+                        .getTransportControls()
+                        .skipToNext();
+            }
+        });
+
+        mBtnPrev = (ImageButton) findViewById(R.id.btnPrev);
+        mBtnPrev.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MediaControllerCompat.getMediaController(MainActivity.this)
+                        .getTransportControls()
+                        .skipToPrevious();
+            }
+        });
+
         mTitle = (TextView) findViewById(R.id.title);
         mSubtitle = (TextView) findViewById(R.id.artist);
         mAlbumArt = (ImageView) findViewById(R.id.album_art);
@@ -221,8 +240,9 @@ public class MainActivity extends AppCompatActivity
             super(context, R.layout.media_list_item, new ArrayList<MediaBrowserCompat.MediaItem>());
         }
 
+        @NonNull
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             MediaBrowserCompat.MediaItem item = getItem(position);
             int itemState = MediaItemViewHolder.STATE_NONE;
             if (item.isPlayable()) {
@@ -248,22 +268,16 @@ public class MainActivity extends AppCompatActivity
     private final View.OnClickListener mPlaybackButtonListener = new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    final int state =
-                            mCurrentState == null
-                                    ? PlaybackStateCompat.STATE_NONE
-                                    : mCurrentState.getState();
-                    if (state == PlaybackState.STATE_PAUSED || state == PlaybackState.STATE_STOPPED
-                            || state == PlaybackState.STATE_NONE) {
+                    final int state = mCurrentState == null ? PlaybackStateCompat.STATE_NONE : mCurrentState.getState();
+                    if (state == PlaybackState.STATE_PAUSED || state == PlaybackState.STATE_STOPPED || state == PlaybackState.STATE_NONE) {
                         if (mCurrentMetadata == null) {
-                            mCurrentMetadata = mMusicLibrary.getMetadata(
-                                            MainActivity.this,
+                            mCurrentMetadata = mMusicLibrary.getMetadata(MainActivity.this,
                                             Long.valueOf(mMusicLibrary.getMediaItems().get(0).getMediaId()));
                             updateMetadata(mCurrentMetadata);
                         }
                         MediaControllerCompat.getMediaController(MainActivity.this)
                                 .getTransportControls()
-                                .playFromMediaId(
-                                        mCurrentMetadata.getDescription().getMediaId(), null);
+                                .playFromMediaId(mCurrentMetadata.getDescription().getMediaId(), null);
                     } else {
                         MediaControllerCompat.getMediaController(MainActivity.this)
                                 .getTransportControls()

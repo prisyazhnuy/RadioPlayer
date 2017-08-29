@@ -17,10 +17,15 @@ public class Migration implements RealmMigration {
         if (oldVersion == 0) {
             schema.create("StationRealmModel")
                     .addField("name", String.class)
+//                    .addField("subname", String.class)
                     .addField("url", String.class)
                     .addField("isFavourite", Boolean.class)
                     .addField("position", Integer.class);
-            oldVersion ++;
         }
+        if (oldVersion == 1) {
+            schema.get("StationRealmModel")
+                    .addField("subname", String.class);
+        }
+        oldVersion ++;
     }
 }

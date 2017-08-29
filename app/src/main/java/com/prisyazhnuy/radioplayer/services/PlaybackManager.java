@@ -14,7 +14,8 @@ import java.io.IOException;
  * Dell on 20.08.2017.
  */
 
-public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener {
+public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
+        MediaPlayer.OnErrorListener {
 
     private final Context mContext;
     private int mState;
@@ -26,6 +27,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
 
     private final Callback mCallback;
     private final AudioManager mAudioManager;
+    private boolean isError = false;
 
     public PlaybackManager(Context context, Callback callback) {
         this.mContext = context;
@@ -55,10 +57,12 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
         boolean mediaChanged = (mCurrentMedia == null || !getCurrentMediaId().equals(Long.parseLong(mediaId)));
 
         if (mMediaPlayer == null) {
+            isError = false;
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
             mMediaPlayer.setWakeMode(mContext.getApplicationContext(), PowerManager.PARTIAL_WAKE_LOCK);
             mMediaPlayer.setOnCompletionListener(this);
+            mMediaPlayer.setOnErrorListener(this);
             mediaChanged = true;
         } else {
             if (mediaChanged) {
@@ -70,19 +74,23 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
             mCurrentMedia = metadata;
             try {
                 mMediaPlayer.setDataSource(mMusicLibrary.getSongUrl(Long.valueOf(mediaId)));
-                mMediaPlayer.prepare();
+                mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mp) {
+                        if (tryToGetAudioFocus()) {
+                            mPlayOnFocusGain = false;
+                            mMediaPlayer.start();
+                            mState = PlaybackStateCompat.STATE_PLAYING;
+                            updatePlaybackState();
+                        } else {
+                            mPlayOnFocusGain = true;
+                        }
+                    }
+                });
+                mMediaPlayer.prepareAsync();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-        }
-
-        if (tryToGetAudioFocus()) {
-            mPlayOnFocusGain = false;
-            mMediaPlayer.start();
-            mState = PlaybackStateCompat.STATE_PLAYING;
-            updatePlaybackState();
-        } else {
-            mPlayOnFocusGain = true;
         }
     }
 
@@ -159,7 +167,12 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
      */
     @Override
     public void onCompletion(MediaPlayer player) {
-        stop();
+        if (!isError) {
+            mMediaPlayer = null;
+            play(mCurrentMedia);
+        } else {
+            stop();
+        }
     }
 
     /** Releases resources used by the service for playback. */
@@ -193,6 +206,12 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
 
         stateBuilder.setState(mState, getCurrentStreamPosition(), 1.0f, SystemClock.elapsedRealtime());
         mCallback.onPlaybackStatusChanged(stateBuilder.build());
+    }
+
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        isError = true;
+        return false;
     }
 
     public interface Callback {
