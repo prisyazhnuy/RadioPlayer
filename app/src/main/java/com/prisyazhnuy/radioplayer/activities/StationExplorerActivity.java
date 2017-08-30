@@ -25,6 +25,8 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
     private static final int UPDATE_STATION_CODE = 1;
     private RecyclerView mRecyclerView;
+    private ItemTouchHelper.Callback touchHelperCallback;
+    private ItemTouchHelper touchHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -62,10 +64,13 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
     @Override
     public void showStations(List<Station> stations) {
+        if (touchHelper != null) {
+            touchHelper.attachToRecyclerView(null);
+        }
         StationAdapter stationAdapter = new StationAdapter(this, getPresenter(), stations);
         mRecyclerView.setAdapter(stationAdapter);
-        ItemTouchHelper.Callback callback = new SimpleTouchHelperCallback(stationAdapter);
-        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelperCallback = new SimpleTouchHelperCallback(stationAdapter);
+        touchHelper = new ItemTouchHelper(touchHelperCallback);
         touchHelper.attachToRecyclerView(mRecyclerView);
     }
 

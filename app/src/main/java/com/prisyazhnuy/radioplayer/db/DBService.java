@@ -29,6 +29,7 @@ public class DBService {
     private RealmConfiguration mConfig = new RealmConfiguration.Builder()
             .schemaVersion(2)
             .migration(new Migration())
+            .initialData(new InitialStationsTransaction())
             .build();
 
     public Observable<Long> deleteStation(long id) {
