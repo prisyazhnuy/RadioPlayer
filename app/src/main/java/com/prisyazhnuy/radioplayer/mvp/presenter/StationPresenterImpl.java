@@ -90,10 +90,10 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void removeStation(long id) {
-        Disposable subscribe = mDBService.deleteStation(id).subscribe(new Consumer<Long>() {
+        Disposable subscribe = mDBService.deleteStation(id).subscribe(new Consumer<Station>() {
             @Override
-            public void accept(Long aLong) throws Exception {
-                getView().showDeleteResult();
+            public void accept(Station station) throws Exception {
+                getView().showDeleteResult(station);
             }
         });
         disposable.add(subscribe);
@@ -113,12 +113,22 @@ public class StationPresenterImpl extends MvpBasePresenter<StationExplorerView> 
 
     @Override
     public void dispose() {
-       // disposable.dispose();
+        // disposable.dispose();
         disposable.clear();
     }
 
     @Override
     public void stationClicked(Station station) {
         getView().showEditStationDialog(station);
+    }
+
+    @Override
+    public void addStation(Station station) {
+        disposable.add(mDBService.saveStation(station).subscribe(new Consumer<Long>() {
+            @Override
+            public void accept(Long aLong) throws Exception {
+                loadAllStations();
+            }
+        }));
     }
 }

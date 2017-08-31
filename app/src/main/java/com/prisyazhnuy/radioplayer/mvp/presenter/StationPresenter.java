@@ -20,4 +20,5 @@ public interface StationPresenter extends MvpPresenter<StationExplorerView> {
     void updatePosition(List<Station> items);
     void dispose();
     void stationClicked(Station station);
+    void addStation(Station station);
 }

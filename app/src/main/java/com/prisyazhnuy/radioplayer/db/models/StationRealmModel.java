@@ -17,6 +17,15 @@ public class StationRealmModel extends RealmObject {
     private boolean isFavourite;
     private int position = -1;
     private String url;
+    private Long time = 0L;
+
+    public Long getTime() {
+        return time;
+    }
+
+    public void setTime(Long time) {
+        this.time = time;
+    }
 
     public long getId() {
         return id;

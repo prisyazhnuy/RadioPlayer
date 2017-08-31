@@ -3,11 +3,13 @@ package com.prisyazhnuy.radioplayer.activities;
 import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Toast;
 
 import com.hannesdorfmann.mosby3.mvp.MvpActivity;
@@ -80,8 +82,16 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
     }
 
     @Override
-    public void showDeleteResult() {
-        Toast.makeText(this, "Item was deleted", Toast.LENGTH_SHORT).show();
+    public void showDeleteResult(final Station station) {
+//        Toast.makeText(this, "Item was deleted", Toast.LENGTH_SHORT).show();
+        Snackbar mySnackbar = Snackbar.make(mRecyclerView, station.toString() + "was deleted", Snackbar.LENGTH_SHORT);
+        mySnackbar.setAction("Undo", new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                presenter.addStation(station);
+            }
+        });
+        mySnackbar.show();
     }
 
     @Override

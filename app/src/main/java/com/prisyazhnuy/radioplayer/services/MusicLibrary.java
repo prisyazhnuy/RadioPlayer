@@ -19,8 +19,12 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
+import io.reactivex.functions.Function;
 import io.realm.Realm;
 
 /**
@@ -50,41 +54,31 @@ public class MusicLibrary {
     private MusicLibrary(Context context) {
         Realm.init(context);
         mDBService = new DBService();
-        updateLibrary();
-//
-//        createMediaMetadataCompat(
-//                "1",
-//                "Jazz in Paris",
-//                "Media Right Productions",
-//                "Jazz & Blues",
-//                "Jazz",
-//                103,
-//                "http://cast.nrj.in.ua/nrj",
-//                R.drawable.album_jazz_blues,
-//                "album_jazz_blues");
-//        createMediaMetadataCompat(
-//                "2",
-//                "The Coldest Shoulder",
-//                "The 126ers",
-//                "Youtube Audio Library Rock 2",
-//                "Rock",
-//                160,
-//                "http://cast2.nrj.in.ua/nrj_party",
-//                R.drawable.album_youtube_audio_library_rock_2,
-//                "album_youtube_audio_library_rock_2");
+        updateLibrary().subscribe();
     }
 
-    public void updateLibrary() {
+    public Observable<Boolean> updateLibrary() {
         music.clear();
         albumRes.clear();
         musicRes.clear();
-        Disposable subscribe = mDBService.getFavourite().subscribe(new Consumer<List<Station>>() {
+        return mDBService.getFavourite()
+                .map(new Function<List<Station>, Boolean>() {
+                    @Override
+                    public Boolean apply(List<Station> stations) throws Exception {
+                        for (Station station : stations) {
+                            createMediaMetadataCompat(station.getId(), station.getName(), station.getSubname(),
+                                    "", "", 0, station.getUrl(), 0, "");
+                        }
+                        return true;
+                    }
+                });
+    }
+
+    public void updateTime(long stationId, long timeSec) {
+        mDBService.updateTime(stationId, timeSec).subscribe(new Consumer<Long>() {
             @Override
-            public void accept(List<Station> stations) throws Exception {
-                for (Station station : stations) {
-                    createMediaMetadataCompat(station.getId(), station.getName(), station.getSubname(),
-                            "", "", 0, station.getUrl(), 0, "");
-                }
+            public void accept(Long aLong) throws Exception {
+
             }
         });
     }
@@ -123,9 +117,7 @@ public class MusicLibrary {
     public List<MediaBrowserCompat.MediaItem> getMediaItems() {
         List<MediaBrowserCompat.MediaItem> result = new ArrayList<>();
         for (MediaMetadataCompat metadata : music.values()) {
-            result.add(
-                    new MediaBrowserCompat.MediaItem(
-                            metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
+            result.add(new MediaBrowserCompat.MediaItem(metadata.getDescription(), MediaBrowserCompat.MediaItem.FLAG_PLAYABLE));
         }
         return result;
     }
@@ -136,19 +128,13 @@ public class MusicLibrary {
         LinkedList<Long> keyList = new LinkedList<>(music.keySet());
         int index = keyList.indexOf(currentMediaId);
         ListIterator<Long> iterator = keyList.listIterator(index);
-//        iterator.previous();
         if (iterator.hasPrevious()) {
             prevId = iterator.previous();
         } else {
-            prevId = keyList.get(keyList.size()-1);
+            prevId = keyList.get(keyList.size() - 1);
         }
         Log.d("MusicLibrary", "Prev id: " + prevId);
         return prevId;
-//        Long prevMediaId = music.lowerKey(currentMediaId);
-//        if (prevMediaId == null) {
-//            prevMediaId = music.firstKey();
-//        }
-//        return prevMediaId;
     }
 
     public Long getNextSong(Long currentMediaId) {
@@ -165,11 +151,6 @@ public class MusicLibrary {
         }
         Log.d("MusicLibrary", "Next id: " + nextId);
         return nextId;
-//        Long nextMediaId = music.higherKey(currentMediaId);
-//        if (nextMediaId == null) {
-//            nextMediaId = music.firstKey();
-//        }
-//        return nextMediaId;
     }
 
     public MediaMetadataCompat getMetadata(Context ctx, Long mediaId) {
@@ -180,7 +161,7 @@ public class MusicLibrary {
         // We don't set it initially on all items so that they don't take unnecessary memory.
         MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();
         for (String key :
-                new String[] {
+                new String[]{
                         MediaMetadataCompat.METADATA_KEY_MEDIA_ID,
                         MediaMetadataCompat.METADATA_KEY_ALBUM,
                         MediaMetadataCompat.METADATA_KEY_ARTIST,
@@ -197,19 +178,18 @@ public class MusicLibrary {
     }
 
     private void createMediaMetadataCompat(Long mediaId, String title, String artist,
-                                                  String album, String genre, long duration,
-                                                  String url, int albumArtResId, String albumArtResName) {
-        music.put(mediaId,
-                new MediaMetadataCompat.Builder()
-                        .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(mediaId))
-                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
-                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
-                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration * 1000)
-                        .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
-                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, getAlbumArtUri(albumArtResName))
-                        .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, getAlbumArtUri(albumArtResName))
-                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
-                        .build());
+                                           String album, String genre, long duration,
+                                           String url, int albumArtResId, String albumArtResName) {
+        music.put(mediaId, new MediaMetadataCompat.Builder()
+                .putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, String.valueOf(mediaId))
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, album)
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, duration * 1000)
+                .putString(MediaMetadataCompat.METADATA_KEY_GENRE, genre)
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, getAlbumArtUri(albumArtResName))
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, getAlbumArtUri(albumArtResName))
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                .build());
         albumRes.put(mediaId, albumArtResId);
         musicRes.put(mediaId, url);
     }

@@ -16,6 +16,7 @@ import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Dell on 23.07.2017.
@@ -54,6 +55,18 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         });
         holder.tvName.setText(item.getName());
         holder.tvSubName.setText(item.getSubname());
+        holder.tvTime.setText(timeFormat(item.getTime()));
+    }
+
+    private String timeFormat(Long seconds) {
+        if (seconds != null) {
+            long hours = seconds / 3600;
+            long minutes = (seconds % 3600) / 60;
+            long sec = seconds % 60;
+            return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, sec);
+        } else {
+            return "00:00:00";
+        }
     }
 
     @Override
@@ -98,6 +111,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         private TextView tvName;
         private TextView tvSubName;
         private CheckBox cbIsFavourite;
+        private TextView tvTime;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -112,6 +126,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
                     }
                 }
             });
+            tvTime = (TextView) itemView.findViewById(R.id.tvTime);
         }
     }
 }

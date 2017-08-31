@@ -28,6 +28,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
     private final Callback mCallback;
     private final AudioManager mAudioManager;
     private boolean isError = false;
+    private long mStartPlayingTime;
 
     public PlaybackManager(Context context, Callback callback) {
         this.mContext = context;
@@ -55,6 +56,9 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
     public void play(MediaMetadataCompat metadata) throws RuntimeException {
         String mediaId = metadata.getDescription().getMediaId();
         boolean mediaChanged = (mCurrentMedia == null || !getCurrentMediaId().equals(Long.parseLong(mediaId)));
+        if (mediaChanged) {
+            pause();
+        }
 
         if (mMediaPlayer == null) {
             isError = false;
@@ -71,6 +75,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
         }
 
         if (mediaChanged) {
+            storeTime();
             mCurrentMedia = metadata;
             try {
                 mMediaPlayer.setDataSource(mMusicLibrary.getSongUrl(Long.valueOf(mediaId)));
@@ -78,6 +83,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
                     @Override
                     public void onPrepared(MediaPlayer mp) {
                         if (tryToGetAudioFocus()) {
+                            mStartPlayingTime = System.currentTimeMillis();
                             mPlayOnFocusGain = false;
                             mMediaPlayer.start();
                             mState = PlaybackStateCompat.STATE_PLAYING;
@@ -94,8 +100,18 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
         }
     }
 
+    private void storeTime() {
+        long finishPlayingTime = System.currentTimeMillis();
+        if (mStartPlayingTime != 0) {
+            long playingTime = (finishPlayingTime - mStartPlayingTime) / 1000;
+            mMusicLibrary.updateTime(Long.parseLong(mCurrentMedia.getDescription().getMediaId()), playingTime);
+        }
+        mStartPlayingTime = 0;
+    }
+
     public void pause() {
         if (isPlaying()) {
+            storeTime();
 //            mMediaPlayer.pause();
             mMediaPlayer.stop();
             mAudioManager.abandonAudioFocus(this);
@@ -107,6 +123,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
     }
 
     public void stop() {
+        storeTime();
         mState = PlaybackStateCompat.STATE_STOPPED;
         updatePlaybackState();
         // Give up Audio focus

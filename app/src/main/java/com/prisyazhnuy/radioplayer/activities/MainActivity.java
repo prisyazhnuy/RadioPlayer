@@ -36,6 +36,8 @@ import com.prisyazhnuy.radioplayer.services.MusicLibrary;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.reactivex.functions.Consumer;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
@@ -182,14 +184,15 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onStart() {
         super.onStart();
-        mMusicLibrary.updateLibrary();
-        mMediaBrowser =
-                new MediaBrowserCompat(
-                        this,
-                        new ComponentName(this, BackgroundAudioService.class),
-                        mConnectionCallback,
-                        null);
-        mMediaBrowser.connect();
+        mMusicLibrary.updateLibrary().subscribe(new Consumer<Boolean>() {
+            @Override
+            public void accept(Boolean aBoolean) throws Exception {
+                mMediaBrowser = new MediaBrowserCompat(MainActivity.this,
+                        new ComponentName(MainActivity.this, BackgroundAudioService.class), mConnectionCallback, null);
+                mMediaBrowser.connect();
+            }
+        });
+
     }
 
     @Override

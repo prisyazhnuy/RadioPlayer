@@ -3,6 +3,8 @@ package com.prisyazhnuy.radioplayer.models;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.prisyazhnuy.radioplayer.db.models.StationRealmModel;
+
 /**
  * Created by Dell on 23.07.2017.
  *
@@ -15,6 +17,7 @@ public class Station implements Parcelable {
     private String url;
     private boolean isFavourite;
     private int position;
+    private Long time = 0L;
 
     public Station(long id, String name, String subname, String url, int position, boolean isFavourite) {
         this.id = id;
@@ -32,6 +35,17 @@ public class Station implements Parcelable {
         url = in.readString();
         isFavourite = in.readByte() != 0;
         position = in.readInt();
+        time = in.readLong();
+    }
+
+    public Station(StationRealmModel model) {
+        this.id = model.getId();
+        this.time = model.getTime();
+        this.name = model.getName();
+        this.subname = model.getSubname();
+        this.position = model.getPosition();
+        this.url = model.getUrl();
+        this.isFavourite = model.isFavourite();
     }
 
     public static final Creator<Station> CREATOR = new Creator<Station>() {
@@ -45,6 +59,14 @@ public class Station implements Parcelable {
             return new Station[size];
         }
     };
+
+    public Long getTime() {
+        return time;
+    }
+
+    public void setTime(Long time) {
+        this.time = time;
+    }
 
     public String getSubname() {
         return subname;
@@ -95,6 +117,18 @@ public class Station implements Parcelable {
     }
 
     @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder("Station: {");
+        builder.append("id: ").append(id).append(",");
+        builder.append("name: ").append(name).append(",");
+        builder.append("subname: ").append(subname).append(",");
+        builder.append("url: ").append(url).append(",");
+        builder.append("isFavorite: ").append(isFavourite).append(",");
+        builder.append("position: ").append(position).append("}");
+        return builder.toString();
+    }
+
+    @Override
     public int describeContents() {
         return 0;
     }
@@ -107,5 +141,6 @@ public class Station implements Parcelable {
         dest.writeString(url);
         dest.writeByte((byte) (isFavourite ? 1 : 0));
         dest.writeInt(position);
+        dest.writeLong(time);
     }
 }

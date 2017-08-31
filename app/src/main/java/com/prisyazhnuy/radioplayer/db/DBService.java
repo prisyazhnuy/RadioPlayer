@@ -27,23 +27,24 @@ import io.realm.Sort;
 
 public class DBService {
     private RealmConfiguration mConfig = new RealmConfiguration.Builder()
-            .schemaVersion(2)
+            .schemaVersion(4)
             .migration(new Migration())
             .initialData(new InitialStationsTransaction())
             .build();
 
-    public Observable<Long> deleteStation(long id) {
+    public Observable<Station> deleteStation(long id) {
         return Observable.just(id)
-                .map(new Function<Long, Long>() {
+                .map(new Function<Long, Station>() {
                     @Override
-                    public Long apply(Long id) throws Exception {
+                    public Station apply(Long id) throws Exception {
                         Realm realm = Realm.getInstance(mConfig);
                         realm.beginTransaction();
-                        RealmResults<StationRealmModel> rows = realm.where(StationRealmModel.class).equalTo("id", id).findAll();
-                        rows.deleteAllFromRealm();
+                        StationRealmModel model = realm.where(StationRealmModel.class).equalTo("id", id).findFirst();
+                        Station station = new Station(model);
+                        model.deleteFromRealm();
                         realm.commitTransaction();
                         realm.close();
-                        return id;
+                        return station;
                     }
                 })
                 .subscribeOn(Schedulers.computation())
@@ -81,6 +82,27 @@ public class DBService {
                     }
                 })
                 .observeOn(AndroidSchedulers.mainThread());
+    }
+
+    public Observable<Long> updateTime(long stationId, final long time) {
+        return Observable.just(stationId)
+                .map(new Function<Long, Long>() {
+                    @Override
+                    public Long apply(Long id) throws Exception {
+                        final Realm realm = Realm.getInstance(mConfig);
+                        realm.beginTransaction();
+                        StationRealmModel model = realm.where(StationRealmModel.class)
+                                .equalTo("id", id)
+                                .findFirst();
+                        if (model != null) {
+                            long totalTime  = model.getTime() + time;
+                            model.setTime(totalTime);
+                        }
+                        realm.commitTransaction();
+                        realm.close();
+                        return id;
+                    }
+                });
     }
 
     public Observable<Long> saveStation(Station station) {
@@ -134,8 +156,10 @@ public class DBService {
                         .findAllSorted("position", Sort.DESCENDING);
                 List<Station> stations = new ArrayList<>(stationsModels.size());
                 for (StationRealmModel model : stationsModels) {
-                    stations.add(new Station(model.getId(), model.getName(), model.getSubname(),
-                            model.getUrl(), model.getPosition(), model.isFavourite()));
+                    Station station = new Station(model.getId(), model.getName(), model.getSubname(),
+                            model.getUrl(), model.getPosition(), model.isFavourite());
+                    station.setTime(model.getTime());
+                    stations.add(station);
                 }
                 realm.commitTransaction();
                 realm.close();
@@ -161,8 +185,10 @@ public class DBService {
                         .findAllSorted("position", Sort.DESCENDING);
                 List<Station> stations = new ArrayList<>(stationsModels.size());
                 for (StationRealmModel model : stationsModels) {
-                    stations.add(new Station(model.getId(), model.getName(), model.getSubname(),
-                            model.getUrl(), model.getPosition(), model.isFavourite()));
+                    Station station = new Station(model.getId(), model.getName(), model.getSubname(),
+                            model.getUrl(), model.getPosition(), model.isFavourite());
+                    station.setTime(model.getTime());
+                    stations.add(station);
                 }
                 realm.commitTransaction();
                 realm.close();
