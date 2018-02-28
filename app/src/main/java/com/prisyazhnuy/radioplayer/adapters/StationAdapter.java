@@ -34,6 +34,16 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
         this.mPresenter = presenter;
     }
 
+    public void clear() {
+        mStations.clear();
+        notifyDataSetChanged();
+    }
+
+    public void addAll(List<Station> stations) {
+        mStations = new ArrayList<>(stations);
+        notifyDataSetChanged();
+    }
+
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         LayoutInflater inflater = LayoutInflater.from(mContext);
@@ -44,6 +54,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         Station item = mStations.get(position);
+        holder.cbIsFavourite.setOnCheckedChangeListener(null);
         holder.cbIsFavourite.setChecked(item.isFavourite());
         holder.cbIsFavourite.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

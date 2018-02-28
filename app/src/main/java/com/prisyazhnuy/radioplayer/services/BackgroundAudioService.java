@@ -1,12 +1,16 @@
 package com.prisyazhnuy.radioplayer.services;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
+import android.view.KeyEvent;
 
 import java.util.List;
 
@@ -16,65 +20,65 @@ import java.util.List;
 
 public class BackgroundAudioService extends MediaBrowserServiceCompat {
 
+    private static final String TAG = "AudioService";
     private MediaSessionCompat mSession;
     private PlaybackManager mPlayback;
     private MusicLibrary mMusicLibrary;
 
-    final MediaSessionCompat.Callback mCallback =
-            new MediaSessionCompat.Callback() {
-                @Override
-                public void onPlayFromMediaId(String mediaId, Bundle extras) {
-                    mSession.setActive(true);
-                    MediaMetadataCompat metadata = mMusicLibrary.getMetadata(BackgroundAudioService.this, Long.valueOf(mediaId));
-                    mSession.setMetadata(metadata);
-                    try {
-                        mPlayback.play(metadata);
-                    } catch (RuntimeException e) {
-                        onSkipToNext();
-                    }
-                }
+    final MediaSessionCompat.Callback mCallback = new MediaSessionCompat.Callback() {
+        @Override
+        public void onPlayFromMediaId(String mediaId, Bundle extras) {
+            mSession.setActive(true);
+            MediaMetadataCompat metadata = mMusicLibrary.getMetadata(BackgroundAudioService.this, Long.valueOf(mediaId));
+            mSession.setMetadata(metadata);
+            try {
+                mPlayback.play(metadata);
+            } catch (RuntimeException e) {
+                mPlayback.onError(null, PlaybackStateCompat.ERROR_CODE_NOT_SUPPORTED, 0);
+                onSkipToNext();
+            }
+        }
 
-                @Override
-                public void onPlay() {
-                    if (mPlayback.getCurrentMediaId() != null) {
-                        onPlayFromMediaId(String.valueOf(mPlayback.getCurrentMediaId()), null);
-                    }
-                }
+        @Override
+        public void onPlay() {
+            if (mPlayback.getCurrentMediaId() != null) {
+                onPlayFromMediaId(String.valueOf(mPlayback.getCurrentMediaId()), null);
+            }
+        }
 
-                @Override
-                public void onPause() {
-                    mPlayback.pause();
-                }
+        @Override
+        public void onPause() {
+            mPlayback.pause();
+        }
 
-                @Override
-                public void onStop() {
-                    stopSelf();
-                }
+        @Override
+        public void onStop() {
+            stopSelf();
+        }
 
-                @Override
-                public void onSkipToNext() {
-                    onPlayFromMediaId(
-                            String.valueOf(mMusicLibrary.getNextSong(mPlayback.getCurrentMediaId())), null);
-                }
+        @Override
+        public void onSkipToNext() {
+            onPlayFromMediaId(String.valueOf(mMusicLibrary.getNextSong(mPlayback.getCurrentMediaId())), null);
+        }
 
-                @Override
-                public void onSkipToPrevious() {
-                    onPlayFromMediaId(
-                            String.valueOf(mMusicLibrary.getPreviousSong(mPlayback.getCurrentMediaId())), null);
-                }
-            };
+        @Override
+        public void onSkipToPrevious() {
+            onPlayFromMediaId(String.valueOf(mMusicLibrary.getPreviousSong(mPlayback.getCurrentMediaId())), null);
+        }
+    };
 
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(TAG, "onCreate");
         mMusicLibrary = MusicLibrary.getInstance(this);
 
-        // Start a new MediaSession.
+        // 1) Start a new MediaSession.
         mSession = new MediaSessionCompat(this, "MusicService");
+        // 2) Set the media session callback
         mSession.setCallback(mCallback);
-        mSession.setFlags(
-                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
-                        | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        // 3) Set the media session token
         setSessionToken(mSession.getSessionToken());
 
         final MediaNotificationManager mediaNotificationManager = new MediaNotificationManager(this);
@@ -89,7 +93,15 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        KeyEvent keyEvent = MediaButtonReceiver.handleIntent(mSession, intent);
+        Log.d(TAG, "onStartCommand, keyEvaent: " + keyEvent);
+        return START_NOT_STICKY;
+    }
+
+    @Override
     public void onDestroy() {
+        Log.d(TAG, "onDestroy");
         mPlayback.stop();
         mSession.release();
     }
@@ -101,6 +113,8 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
 
     @Override
     public void onLoadChildren(@NonNull final String parentMediaId, @NonNull final Result<List<MediaBrowserCompat.MediaItem>> result) {
-        result.sendResult(mMusicLibrary.getMediaItems());
+        List<MediaBrowserCompat.MediaItem> mediaItems = mMusicLibrary.getMediaItems();
+        Log.d("TAG", "mediaItems: " + mediaItems);
+        result.sendResult(mediaItems);
     }
 }

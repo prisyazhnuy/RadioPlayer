@@ -14,7 +14,7 @@ import java.io.IOException;
  * Dell on 20.08.2017.
  */
 
-public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
+class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnCompletionListener,
         MediaPlayer.OnErrorListener {
 
     private final Context mContext;
@@ -30,35 +30,32 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
     private boolean isError = false;
     private long mStartPlayingTime;
 
-    public PlaybackManager(Context context, Callback callback) {
+    PlaybackManager(Context context, Callback callback) {
         this.mContext = context;
         this.mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         this.mCallback = callback;
         this.mMusicLibrary = MusicLibrary.getInstance(context);
     }
 
-    public boolean isPlaying() {
+    private boolean isPlaying() {
         return mPlayOnFocusGain || (mMediaPlayer != null && mMediaPlayer.isPlaying());
     }
 
-    public MediaMetadataCompat getCurrentMedia() {
+    MediaMetadataCompat getCurrentMedia() {
         return mCurrentMedia;
     }
 
-    public Long getCurrentMediaId() {
+    Long getCurrentMediaId() {
         return Long.valueOf(mCurrentMedia == null ? null : mCurrentMedia.getDescription().getMediaId());
     }
 
-    public int getCurrentStreamPosition() {
+    private int getCurrentStreamPosition() {
         return mMediaPlayer != null ? mMediaPlayer.getCurrentPosition() : 0;
     }
 
-    public void play(MediaMetadataCompat metadata) throws RuntimeException {
+    void play(MediaMetadataCompat metadata) throws RuntimeException {
         String mediaId = metadata.getDescription().getMediaId();
         boolean mediaChanged = (mCurrentMedia == null || !getCurrentMediaId().equals(Long.parseLong(mediaId)));
-        if (mediaChanged) {
-            pause();
-        }
 
         if (mMediaPlayer == null) {
             isError = false;
@@ -94,6 +91,8 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
                     }
                 });
                 mMediaPlayer.prepareAsync();
+                mState = PlaybackStateCompat.STATE_BUFFERING;
+                updatePlaybackState();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -109,7 +108,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
         mStartPlayingTime = 0;
     }
 
-    public void pause() {
+    void pause() {
         if (isPlaying()) {
             storeTime();
 //            mMediaPlayer.pause();
@@ -122,7 +121,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
         releaseMediaPlayer();
     }
 
-    public void stop() {
+    void stop() {
         storeTime();
         mState = PlaybackStateCompat.STATE_STOPPED;
         updatePlaybackState();
@@ -134,9 +133,7 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
 
     /** Try to get the system audio focus. */
     private boolean tryToGetAudioFocus() {
-        int result =
-                mAudioManager.requestAudioFocus(
-                        this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+        int result = mAudioManager.requestAudioFocus(this, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
         return result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
     }
 
@@ -203,12 +200,11 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
 
     @PlaybackStateCompat.Actions
     private long getAvailableActions() {
-        long actions =
-                PlaybackStateCompat.ACTION_PLAY
-                        | PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
-                        | PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH
-                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                        | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS;
+        long actions = PlaybackStateCompat.ACTION_PLAY
+                | PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
+                | PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH
+                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS;
         if (isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
         }
@@ -228,10 +224,12 @@ public class PlaybackManager implements AudioManager.OnAudioFocusChangeListener,
     @Override
     public boolean onError(MediaPlayer mp, int what, int extra) {
         isError = true;
+        mState = PlaybackStateCompat.STATE_ERROR;
+        updatePlaybackState();
         return false;
     }
 
-    public interface Callback {
+    interface Callback {
         void onPlaybackStatusChanged(PlaybackStateCompat state);
     }
 }

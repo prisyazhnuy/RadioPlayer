@@ -116,6 +116,7 @@ public class DBService {
                         model.setUrl(station.getUrl());
                         model.setPosition(station.getPosition());
                         model.setSubname(station.getSubname());
+                        model.setTime(station.getTime());
                         return Observable.just(model);
                     }
                 })
@@ -125,16 +126,16 @@ public class DBService {
                         Realm realm = Realm.getInstance(mConfig);
                         realm.beginTransaction();
                         long id;
-                        int position;
+//                        int position;
                         try {
                             id = realm.where(StationRealmModel.class).max("id").longValue() + 1;
-                            position = realm.where(StationRealmModel.class).max("position").intValue() + 1;
+//                            position = realm.where(StationRealmModel.class).max("position").intValue() + 1;
                         } catch (Exception e) {
                             id = 0L;
-                            position = 0;
+//                            position = 0;
                         }
                         stationRealmModel.setId(id);
-                        stationRealmModel.setPosition(position);
+//                        stationRealmModel.setPosition(position);
                         realm.copyToRealm(stationRealmModel);
                         realm.commitTransaction();
                         realm.close();

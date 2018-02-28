@@ -18,6 +18,8 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +29,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.prisyazhnuy.radioplayer.R;
 import com.prisyazhnuy.radioplayer.services.BackgroundAudioService;
@@ -62,13 +65,11 @@ public class MainActivity extends AppCompatActivity
                 public void onConnected() {
                     mMediaBrowser.subscribe(mMediaBrowser.getRoot(), mSubscriptionCallback);
                     try {
-                        MediaControllerCompat mediaController = new MediaControllerCompat(
-                                MainActivity.this, mMediaBrowser.getSessionToken());
+                        MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, mMediaBrowser.getSessionToken());
                         updatePlaybackState(mediaController.getPlaybackState());
                         updateMetadata(mediaController.getMetadata());
                         mediaController.registerCallback(mMediaControllerCallback);
-                        MediaControllerCompat.setMediaController(
-                                MainActivity.this, mediaController);
+                        MediaControllerCompat.setMediaController(MainActivity.this, mediaController);
                     } catch (RemoteException e) {
                         throw new RuntimeException(e);
                     }
@@ -98,13 +99,13 @@ public class MainActivity extends AppCompatActivity
                 }
             };
 
-    private final MediaBrowserCompat.SubscriptionCallback mSubscriptionCallback =
-            new MediaBrowserCompat.SubscriptionCallback() {
-                @Override
-                public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
-                    onMediaLoaded(children);
-                }
-            };
+    private final MediaBrowserCompat.SubscriptionCallback mSubscriptionCallback = new MediaBrowserCompat.SubscriptionCallback() {
+        @Override
+        public void onChildrenLoaded(@NonNull String parentId, @NonNull List<MediaBrowserCompat.MediaItem> children) {
+            Log.d("TAG", "items: " + children);
+            onMediaLoaded(children);
+        }
+    };
 
     private void onMediaLoaded(List<MediaBrowserCompat.MediaItem> media) {
         mBrowserAdapter.clear();
@@ -212,27 +213,48 @@ public class MainActivity extends AppCompatActivity
 
     private void updatePlaybackState(PlaybackStateCompat state) {
         mCurrentState = state;
-        if (state == null
-                || state.getState() == PlaybackState.STATE_PAUSED
-                || state.getState() == PlaybackState.STATE_STOPPED) {
-            mPlayPause.setImageDrawable(
-                    ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
+        if (state == null) {
+            mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
         } else {
-            mPlayPause.setImageDrawable(
-                    ContextCompat.getDrawable(this, R.drawable.ic_pause_black_36dp));
+            switch (state.getState()) {
+                case PlaybackStateCompat.STATE_PAUSED:
+                case PlaybackStateCompat.STATE_STOPPED:
+                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
+                    break;
+                case PlaybackStateCompat.STATE_PLAYING:
+                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_black_36dp));
+                    break;
+                case PlaybackStateCompat.STATE_CONNECTING:
+                case PlaybackStateCompat.STATE_BUFFERING:
+                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_equalizer1_white_36dp));
+                    break;
+                case PlaybackStateCompat.STATE_ERROR:
+                    Toast.makeText(this, "Station is not available", Toast.LENGTH_SHORT).show();
+                    break;
+                default:
+                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
+            }
         }
         mPlaybackControls.setVisibility(state == null ? View.GONE : View.VISIBLE);
     }
 
     private void updateMetadata(MediaMetadataCompat metadata) {
         mCurrentMetadata = metadata;
-        mTitle.setText(metadata == null ? "" : metadata.getDescription().getTitle());
-        mSubtitle.setText(metadata == null ? "" : metadata.getDescription().getSubtitle());
-        mAlbumArt.setImageBitmap(
-                metadata == null
-                        ? null
-                        : mMusicLibrary.getAlbumBitmap(
-                        this, Long.valueOf(metadata.getDescription().getMediaId())));
+        String title = "";
+        String subtitle = "";
+        if (metadata != null && metadata.getDescription() != null) {
+            if (metadata.getDescription().getTitle() != null) {
+                title = metadata.getDescription().getTitle().toString();
+            }
+            if (metadata.getDescription().getSubtitle() != null) {
+                subtitle = metadata.getDescription().getSubtitle().toString();
+            }
+        }
+        mTitle.setText(title);
+        mSubtitle.setText(subtitle);
+//        if (!title.isEmpty() && !subtitle.isEmpty()) {
+//            mAlbumArt.setImageBitmap(new TextDrawable("" + title.charAt(0) + subtitle.charAt(0), 0).toBitmap());//metadata == null ? null : mMusicLibrary.getAlbumBitmap(this, Long.valueOf(metadata.getDescription().getMediaId())));
+//        }
         mBrowserAdapter.notifyDataSetChanged();
     }
 
@@ -247,20 +269,22 @@ public class MainActivity extends AppCompatActivity
         @Override
         public View getView(int position, View convertView, @NonNull ViewGroup parent) {
             MediaBrowserCompat.MediaItem item = getItem(position);
-            int itemState = MediaItemViewHolder.STATE_NONE;
+            int itemState = PlaybackStateCompat.STATE_NONE;
             if (item.isPlayable()) {
                 String itemMediaId = item.getDescription().getMediaId();
                 int playbackState = PlaybackStateCompat.STATE_NONE;
-                itemState = MediaItemViewHolder.STATE_PLAYABLE;
+//                itemState = MediaItemViewHolder.STATE_PLAYABLE;
                 if (mCurrentState != null) {
                     playbackState = mCurrentState.getState();
                 }
-                if (mCurrentMetadata != null && itemMediaId.equals(mCurrentMetadata.getDescription().getMediaId())) {
-                    if (playbackState == PlaybackState.STATE_PLAYING || playbackState == PlaybackState.STATE_BUFFERING) {
-                        itemState = MediaItemViewHolder.STATE_PLAYING;
-                    } else if (playbackState != PlaybackState.STATE_ERROR) {
-                        itemState = MediaItemViewHolder.STATE_PAUSED;
-                    }
+                if (mCurrentMetadata != null && TextUtils.equals(itemMediaId, mCurrentMetadata.getDescription().getMediaId())) {
+                    itemState = playbackState;
+
+//                    if (playbackState == PlaybackState.STATE_PLAYING || playbackState == PlaybackState.STATE_BUFFERING) {
+//                        itemState = PlaybackStateCompat.STATE_PLAYING;
+//                    } else if (playbackState != PlaybackState.STATE_ERROR) {
+//                        itemState = PlaybackStateCompat.STATE_PAUSED;
+//                    }
                 }
             }
             return MediaItemViewHolder.setupView(
@@ -269,25 +293,25 @@ public class MainActivity extends AppCompatActivity
     }
 
     private final View.OnClickListener mPlaybackButtonListener = new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    final int state = mCurrentState == null ? PlaybackStateCompat.STATE_NONE : mCurrentState.getState();
-                    if (state == PlaybackState.STATE_PAUSED || state == PlaybackState.STATE_STOPPED || state == PlaybackState.STATE_NONE) {
-                        if (mCurrentMetadata == null) {
-                            mCurrentMetadata = mMusicLibrary.getMetadata(MainActivity.this,
-                                            Long.valueOf(mMusicLibrary.getMediaItems().get(0).getMediaId()));
-                            updateMetadata(mCurrentMetadata);
-                        }
-                        MediaControllerCompat.getMediaController(MainActivity.this)
-                                .getTransportControls()
-                                .playFromMediaId(mCurrentMetadata.getDescription().getMediaId(), null);
-                    } else {
-                        MediaControllerCompat.getMediaController(MainActivity.this)
-                                .getTransportControls()
-                                .pause();
-                    }
+        @Override
+        public void onClick(View v) {
+            final int state = mCurrentState == null ? PlaybackStateCompat.STATE_NONE : mCurrentState.getState();
+            if (state == PlaybackState.STATE_PAUSED || state == PlaybackState.STATE_STOPPED || state == PlaybackState.STATE_NONE) {
+                if (mCurrentMetadata == null) {
+                    mCurrentMetadata = mMusicLibrary.getMetadata(MainActivity.this,
+                            Long.valueOf(mMusicLibrary.getMediaItems().get(0).getMediaId()));
+                    updateMetadata(mCurrentMetadata);
                 }
-            };
+                MediaControllerCompat.getMediaController(MainActivity.this)
+                        .getTransportControls()
+                        .playFromMediaId(mCurrentMetadata.getDescription().getMediaId(), null);
+            } else {
+                MediaControllerCompat.getMediaController(MainActivity.this)
+                        .getTransportControls()
+                        .pause();
+            }
+        }
+    };
 
     @Override
     public void onBackPressed() {

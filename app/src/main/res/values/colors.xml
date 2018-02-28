@@ -6,4 +6,5 @@
 
     <color name="notification_bg">@color/colorPrimary</color>
     <color name="media_item_icon_not_playing">#ccc</color>
+    <color name="notification_bg_old">#ff6969</color>
 </resources>

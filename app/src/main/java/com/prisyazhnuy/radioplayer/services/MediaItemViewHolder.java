@@ -2,11 +2,12 @@ package com.prisyazhnuy.radioplayer.services;
 
 import android.app.Activity;
 import android.graphics.drawable.AnimationDrawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -17,12 +18,6 @@ import com.prisyazhnuy.radioplayer.R;
  */
 
 public class MediaItemViewHolder {
-    public static final int STATE_INVALID = -1;
-    public static final int STATE_NONE = 0;
-    public static final int STATE_PLAYABLE = 1;
-    public static final int STATE_PAUSED = 2;
-    public static final int STATE_PLAYING = 3;
-    AnimationDrawable animation;
 
     ImageView mImageView;
     TextView mTitleView;
@@ -31,7 +26,7 @@ public class MediaItemViewHolder {
     public static View setupView(Activity activity, View convertView, ViewGroup parent, MediaDescriptionCompat description, int state) {
         MediaItemViewHolder holder;
 
-        Integer cachedState = STATE_INVALID;
+        Integer cachedState = PlaybackStateCompat.STATE_NONE;
 
         if (convertView == null) {
             convertView = LayoutInflater.from(activity).inflate(R.layout.media_list_item, parent, false);
@@ -52,29 +47,29 @@ public class MediaItemViewHolder {
         // new state.
         if (cachedState == null || cachedState != state) {
             switch (state) {
-                case STATE_PLAYABLE:
-                    holder.mImageView.setImageDrawable(
-                            activity.getResources()
-                                    .getDrawable(R.drawable.ic_play_arrow_black_36dp));
+                case PlaybackStateCompat.STATE_NONE:
+                    holder.mImageView.setImageDrawable(activity.getResources().getDrawable(R.drawable.ic_play_arrow_black_36dp));
                     holder.mImageView.setVisibility(View.VISIBLE);
                     break;
-                case STATE_PLAYING:
+                case PlaybackStateCompat.STATE_PLAYING:
                     AnimationDrawable animation = (AnimationDrawable) activity.getResources().getDrawable(R.drawable.ic_equalizer_white_36dp);
                     holder.mImageView.setImageDrawable(animation);
                     holder.mImageView.setVisibility(View.VISIBLE);
                     animation.start();
                     break;
-                case STATE_PAUSED:
+                case PlaybackStateCompat.STATE_PAUSED:
                     try {
                         AnimationDrawable animation1 = (AnimationDrawable) holder.mImageView.getDrawable();
                         if (animation1 != null) {
                             animation1.stop();
                         }
                     } catch (ClassCastException e) {
-                        holder.mImageView.setImageDrawable(activity.getResources()
-                                .getDrawable(R.drawable.ic_equalizer1_white_36dp));
-
+                        holder.mImageView.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.ic_equalizer1_white_36dp));
                     }
+                    holder.mImageView.setVisibility(View.VISIBLE);
+                    break;
+                case PlaybackStateCompat.STATE_BUFFERING:
+                    holder.mImageView.setImageDrawable(ContextCompat.getDrawable(activity, R.drawable.favorite_checkbox_icon));
                     holder.mImageView.setVisibility(View.VISIBLE);
                     break;
                 default:

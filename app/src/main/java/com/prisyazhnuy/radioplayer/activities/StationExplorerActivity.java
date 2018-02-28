@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.support.annotation.NonNull;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -21,14 +22,14 @@ import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenter;
 import com.prisyazhnuy.radioplayer.mvp.presenter.StationPresenterImpl;
 import com.prisyazhnuy.radioplayer.mvp.view.StationExplorerView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StationExplorerActivity extends MvpActivity<StationExplorerView, StationPresenter> implements StationExplorerView {
 
     private static final int UPDATE_STATION_CODE = 1;
     private RecyclerView mRecyclerView;
-    private ItemTouchHelper.Callback touchHelperCallback;
-    private ItemTouchHelper touchHelper;
+    private StationAdapter mStationAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +38,14 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
         mRecyclerView = (RecyclerView) findViewById(R.id.rvStations);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
+
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
+        mRecyclerView.addItemDecoration(dividerItemDecoration);
+        mStationAdapter = new StationAdapter(this, getPresenter(), new ArrayList<Station>());
+        mRecyclerView.setAdapter(mStationAdapter);
+        ItemTouchHelper.Callback callback = new SimpleTouchHelperCallback(mStationAdapter);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(mRecyclerView);
 
         getPresenter().loadAllStations();
     }
@@ -66,14 +75,8 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
     @Override
     public void showStations(List<Station> stations) {
-        if (touchHelper != null) {
-            touchHelper.attachToRecyclerView(null);
-        }
-        StationAdapter stationAdapter = new StationAdapter(this, getPresenter(), stations);
-        mRecyclerView.setAdapter(stationAdapter);
-        touchHelperCallback = new SimpleTouchHelperCallback(stationAdapter);
-        touchHelper = new ItemTouchHelper(touchHelperCallback);
-        touchHelper.attachToRecyclerView(mRecyclerView);
+        mStationAdapter.clear();
+        mStationAdapter.addAll(stations);
     }
 
     @Override
