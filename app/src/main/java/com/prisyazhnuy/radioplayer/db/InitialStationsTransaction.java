@@ -49,7 +49,8 @@ public class InitialStationsTransaction implements Realm.Transaction {
         Station record = new Station(3, "Radio record", "Online", "http://air.radiorecord.ru:805/rr_320", 3, true);
         Station kissFm = new Station(4, "Kiss fm", "Online", "http://online-kissfm.tavrmedia.ua/KissFM", 4, true);
         Station kissFm2 = new Station(5, "Kiss fm", "Digital", "http://online-kissfm.tavrmedia.ua/KissFM_digital", 5, true);
-        stations.addAll(Arrays.asList(energy,energy2, record, kissFm, kissFm2));
+        Station radioRecord = new Station(6, "Radio Record", "Online", "http://air2.radiorecord.ru:9003//rr_320", 6, true);
+        stations.addAll(Arrays.asList(energy,energy2, record, kissFm, kissFm2, radioRecord));
         return stations;
     }
 }

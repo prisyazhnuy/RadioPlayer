@@ -34,6 +34,7 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
             try {
                 mPlayback.play(metadata);
             } catch (RuntimeException e) {
+                Log.e(TAG, e.getLocalizedMessage(), e);
                 mPlayback.onError(null, PlaybackStateCompat.ERROR_CODE_NOT_SUPPORTED, 0);
                 onSkipToNext();
             }
@@ -95,7 +96,7 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         KeyEvent keyEvent = MediaButtonReceiver.handleIntent(mSession, intent);
-        Log.d(TAG, "onStartCommand, keyEvaent: " + keyEvent);
+        Log.d(TAG, "onStartCommand, keyEvent: " + keyEvent);
         return START_NOT_STICKY;
     }
 
