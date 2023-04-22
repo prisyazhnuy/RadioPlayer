@@ -1,7 +1,7 @@
 package com.prisyazhnuy.radioplayer.adapters;
 
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.ItemTouchHelper;
 
 /**
  * Dell on 26.07.2017.

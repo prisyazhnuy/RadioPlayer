@@ -1,7 +1,7 @@
 package com.prisyazhnuy.radioplayer.adapters;
 
 import android.content.Context;
-import android.support.v7.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -89,9 +89,9 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.ViewHold
     public void onItemMove(int fromPosition, int toPosition) {
         Station stationFrom = mStations.get(fromPosition);
         Station stationTo = mStations.get(toPosition);
-        int posTmp = stationFrom.getPosition();
-        stationFrom.setPosition(stationTo.getPosition());
-        stationTo.setPosition(posTmp);
+//        int posTmp = stationFrom.getPosition();
+        stationFrom.setPosition(toPosition);
+        stationTo.setPosition(fromPosition);
         List<Station> items = new ArrayList<>(2);
         items.add(stationFrom);
         items.add(stationTo);

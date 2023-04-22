@@ -2,11 +2,11 @@ package com.prisyazhnuy.radioplayer.services;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.support.v4.media.MediaBrowserCompat;
-import android.support.v4.media.MediaBrowserServiceCompat;
+import androidx.media.MediaBrowserServiceCompat;
 import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaButtonReceiver;
+import androidx.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.Log;
@@ -29,7 +29,7 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
         @Override
         public void onPlayFromMediaId(String mediaId, Bundle extras) {
             mSession.setActive(true);
-            MediaMetadataCompat metadata = mMusicLibrary.getMetadata(BackgroundAudioService.this, Long.valueOf(mediaId));
+            MediaMetadataCompat metadata = mMusicLibrary.getMetadata(Long.valueOf(mediaId));
             mSession.setMetadata(metadata);
             try {
                 mPlayback.play(metadata);
@@ -54,7 +54,7 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
 
         @Override
         public void onStop() {
-            stopSelf();
+            mPlayback.stop();
         }
 
         @Override
@@ -84,12 +84,9 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
 
         final MediaNotificationManager mediaNotificationManager = new MediaNotificationManager(this);
 
-        mPlayback = new PlaybackManager(this, new PlaybackManager.Callback() {
-            @Override
-            public void onPlaybackStatusChanged(PlaybackStateCompat state) {
-                mSession.setPlaybackState(state);
-                mediaNotificationManager.update(mPlayback.getCurrentMedia(), state, getSessionToken());
-            }
+        mPlayback = new PlaybackManager(this, state -> {
+            mSession.setPlaybackState(state);
+            mediaNotificationManager.update(mPlayback.getCurrentMedia(), state, getSessionToken());
         });
     }
 
@@ -97,7 +94,7 @@ public class BackgroundAudioService extends MediaBrowserServiceCompat {
     public int onStartCommand(Intent intent, int flags, int startId) {
         KeyEvent keyEvent = MediaButtonReceiver.handleIntent(mSession, intent);
         Log.d(TAG, "onStartCommand, keyEvent: " + keyEvent);
-        return START_NOT_STICKY;
+        return START_STICKY;
     }
 
     @Override

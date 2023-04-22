@@ -1,13 +1,13 @@
 package com.prisyazhnuy.radioplayer.activities;
 
 import android.content.Intent;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
+import com.google.android.material.snackbar.Snackbar;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -36,7 +36,7 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_station_explorer);
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.rvStations);
+        mRecyclerView = findViewById(R.id.rvStations);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
 
         DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(this, LinearLayoutManager.VERTICAL);
@@ -86,14 +86,8 @@ public class StationExplorerActivity extends MvpActivity<StationExplorerView, St
 
     @Override
     public void showDeleteResult(final Station station) {
-//        Toast.makeText(this, "Item was deleted", Toast.LENGTH_SHORT).show();
         Snackbar mySnackbar = Snackbar.make(mRecyclerView, station.toString() + "was deleted", Snackbar.LENGTH_SHORT);
-        mySnackbar.setAction("Undo", new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                presenter.addStation(station);
-            }
-        });
+        mySnackbar.setAction("Undo", v -> presenter.addStation(station));
         mySnackbar.show();
     }
 

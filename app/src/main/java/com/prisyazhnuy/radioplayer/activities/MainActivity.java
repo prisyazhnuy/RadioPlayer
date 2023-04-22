@@ -1,56 +1,47 @@
 package com.prisyazhnuy.radioplayer.activities;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.media.session.PlaybackState;
 import android.os.Bundle;
-import android.os.RemoteException;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.prisyazhnuy.radioplayer.R;
+import com.prisyazhnuy.radioplayer.Utils;
+import com.prisyazhnuy.radioplayer.adapters.BrowseAdapter;
+import com.prisyazhnuy.radioplayer.adapters.BrowseListener;
 import com.prisyazhnuy.radioplayer.services.BackgroundAudioService;
-import com.prisyazhnuy.radioplayer.services.MediaItemViewHolder;
 import com.prisyazhnuy.radioplayer.services.MusicLibrary;
 
-import java.util.ArrayList;
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
-import io.reactivex.functions.Consumer;
-
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements BrowseListener {
 
     private BrowseAdapter mBrowserAdapter;
+    private RecyclerView listView;
     private ImageButton mPlayPause;
-    private ImageButton mBtnPrev;
-    private ImageButton mBtnNext;
     private TextView mTitle;
     private TextView mSubtitle;
-    private ImageView mAlbumArt;
     private ViewGroup mPlaybackControls;
 
     private MediaMetadataCompat mCurrentMetadata;
@@ -64,15 +55,11 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onConnected() {
                     mMediaBrowser.subscribe(mMediaBrowser.getRoot(), mSubscriptionCallback);
-                    try {
-                        MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, mMediaBrowser.getSessionToken());
-                        updatePlaybackState(mediaController.getPlaybackState());
-                        updateMetadata(mediaController.getMetadata());
-                        mediaController.registerCallback(mMediaControllerCallback);
-                        MediaControllerCompat.setMediaController(MainActivity.this, mediaController);
-                    } catch (RemoteException e) {
-                        throw new RuntimeException(e);
-                    }
+                    MediaControllerCompat mediaController = new MediaControllerCompat(MainActivity.this, mMediaBrowser.getSessionToken());
+                    updatePlaybackState(mediaController.getPlaybackState());
+                    updateMetadata(mediaController.getMetadata());
+                    mediaController.registerCallback(mMediaControllerCallback);
+                    MediaControllerCompat.setMediaController(MainActivity.this, mediaController);
                 }
             };
 
@@ -83,12 +70,16 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onMetadataChanged(MediaMetadataCompat metadata) {
                     updateMetadata(metadata);
-                    mBrowserAdapter.notifyDataSetChanged();
+                    mBrowserAdapter.setCurrentMetadata(metadata);
+                    int position = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER);
+                    mBrowserAdapter.notifyItemChanged(position);
+                    listView.getLayoutManager().scrollToPosition(position);
                 }
 
                 @Override
                 public void onPlaybackStateChanged(PlaybackStateCompat state) {
                     updatePlaybackState(state);
+                    mBrowserAdapter.setCurrentState(state);
                     mBrowserAdapter.notifyDataSetChanged();
                 }
 
@@ -120,78 +111,55 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    public void browseStation(@Nullable MediaBrowserCompat.MediaItem item) {
+        if (item != null) {
+            onMediaItemSelected(item);
+        }
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mMusicLibrary = MusicLibrary.getInstance(this);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
         setTitle(getString(R.string.app_name));
-        setSupportActionBar((Toolbar) findViewById(R.id.toolbar));
+        setSupportActionBar(findViewById(R.id.toolbar));
 
-        mBrowserAdapter = new BrowseAdapter(this);
+        mBrowserAdapter = new BrowseAdapter(this, mCurrentState, mCurrentMetadata, this);
 
-        ListView listView = (ListView) findViewById(R.id.list_view);
+        listView = findViewById(R.id.list_view);
         listView.setAdapter(mBrowserAdapter);
-        listView.setOnItemClickListener(
-                new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        MediaBrowserCompat.MediaItem item = mBrowserAdapter.getItem(position);
-                        onMediaItemSelected(item);
-                    }
-                });
 
         // Playback controls configuration:
-        mPlaybackControls = (ViewGroup) findViewById(R.id.playback_controls);
-        mPlayPause = (ImageButton) findViewById(R.id.play_pause);
+        mPlaybackControls = findViewById(R.id.playback_controls);
+        mPlayPause = findViewById(R.id.play_pause);
         mPlayPause.setEnabled(true);
         mPlayPause.setOnClickListener(mPlaybackButtonListener);
 
-        mBtnNext = (ImageButton) findViewById(R.id.btnNext);
-        mBtnNext.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MediaControllerCompat.getMediaController(MainActivity.this)
-                        .getTransportControls()
-                        .skipToNext();
-            }
-        });
+        ImageButton mBtnNext = findViewById(R.id.btnNext);
+        mBtnNext.setOnClickListener(v -> MediaControllerCompat.getMediaController(MainActivity.this)
+                .getTransportControls()
+                .skipToNext());
 
-        mBtnPrev = (ImageButton) findViewById(R.id.btnPrev);
-        mBtnPrev.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                MediaControllerCompat.getMediaController(MainActivity.this)
-                        .getTransportControls()
-                        .skipToPrevious();
-            }
-        });
+        ImageButton mBtnPrev = findViewById(R.id.btnPrev);
+        mBtnPrev.setOnClickListener(v -> MediaControllerCompat.getMediaController(MainActivity.this)
+                .getTransportControls()
+                .skipToPrevious());
 
-        mTitle = (TextView) findViewById(R.id.title);
-        mSubtitle = (TextView) findViewById(R.id.artist);
-        mAlbumArt = (ImageView) findViewById(R.id.album_art);
+        mTitle = findViewById(R.id.title);
+        mSubtitle = findViewById(R.id.artist);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        mMusicLibrary.updateLibrary().subscribe(new Consumer<Boolean>() {
-            @Override
-            public void accept(Boolean aBoolean) throws Exception {
-                mMediaBrowser = new MediaBrowserCompat(MainActivity.this,
-                        new ComponentName(MainActivity.this, BackgroundAudioService.class), mConnectionCallback, null);
-                mMediaBrowser.connect();
-            }
+        mMusicLibrary.updateLibrary().subscribe(aBoolean -> {
+            mMediaBrowser = new MediaBrowserCompat(MainActivity.this,
+                    new ComponentName(MainActivity.this, BackgroundAudioService.class), mConnectionCallback, null);
+            mMediaBrowser.connect();
         });
 
     }
@@ -214,25 +182,24 @@ public class MainActivity extends AppCompatActivity
     private void updatePlaybackState(PlaybackStateCompat state) {
         mCurrentState = state;
         if (state == null) {
-            mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
+            mPlayPause.setImageResource(R.drawable.ic_play_arrow_36);
         } else {
             switch (state.getState()) {
-                case PlaybackStateCompat.STATE_PAUSED:
-                case PlaybackStateCompat.STATE_STOPPED:
-                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
-                    break;
                 case PlaybackStateCompat.STATE_PLAYING:
-                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_pause_black_36dp));
+                    mPlayPause.setImageResource(R.drawable.ic_pause_black_36dp);
                     break;
                 case PlaybackStateCompat.STATE_CONNECTING:
                 case PlaybackStateCompat.STATE_BUFFERING:
-                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_equalizer1_white_36dp));
+                    mPlayPause.setImageDrawable(Utils.createProgressAnimation(this,
+                            3,
+                            ContextCompat.getColor(this, R.color.colorPrimary),
+                            10));
                     break;
                 case PlaybackStateCompat.STATE_ERROR:
                     Toast.makeText(this, "Station is not available", Toast.LENGTH_SHORT).show();
                     break;
                 default:
-                    mPlayPause.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_play_arrow_black_36dp));
+                    mPlayPause.setImageResource(R.drawable.ic_play_arrow_36);
             }
         }
         mPlaybackControls.setVisibility(state == null ? View.GONE : View.VISIBLE);
@@ -249,46 +216,12 @@ public class MainActivity extends AppCompatActivity
             if (metadata.getDescription().getSubtitle() != null) {
                 subtitle = metadata.getDescription().getSubtitle().toString();
             }
-        }
-        mTitle.setText(title);
-        mSubtitle.setText(subtitle);
-//        if (!title.isEmpty() && !subtitle.isEmpty()) {
-//            mAlbumArt.setImageBitmap(new TextDrawable("" + title.charAt(0) + subtitle.charAt(0), 0).toBitmap());//metadata == null ? null : mMusicLibrary.getAlbumBitmap(this, Long.valueOf(metadata.getDescription().getMediaId())));
-//        }
-        mBrowserAdapter.notifyDataSetChanged();
-    }
+            mTitle.setText(title);
+            mSubtitle.setText(subtitle);
 
-    // Displays list of browsed MediaItems.
-    private class BrowseAdapter extends ArrayAdapter<MediaBrowserCompat.MediaItem> {
-
-        public BrowseAdapter(Activity context) {
-            super(context, R.layout.media_list_item, new ArrayList<MediaBrowserCompat.MediaItem>());
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
-            MediaBrowserCompat.MediaItem item = getItem(position);
-            int itemState = PlaybackStateCompat.STATE_NONE;
-            if (item.isPlayable()) {
-                String itemMediaId = item.getDescription().getMediaId();
-                int playbackState = PlaybackStateCompat.STATE_NONE;
-//                itemState = MediaItemViewHolder.STATE_PLAYABLE;
-                if (mCurrentState != null) {
-                    playbackState = mCurrentState.getState();
-                }
-                if (mCurrentMetadata != null && TextUtils.equals(itemMediaId, mCurrentMetadata.getDescription().getMediaId())) {
-                    itemState = playbackState;
-
-//                    if (playbackState == PlaybackState.STATE_PLAYING || playbackState == PlaybackState.STATE_BUFFERING) {
-//                        itemState = PlaybackStateCompat.STATE_PLAYING;
-//                    } else if (playbackState != PlaybackState.STATE_ERROR) {
-//                        itemState = PlaybackStateCompat.STATE_PAUSED;
-//                    }
-                }
-            }
-            return MediaItemViewHolder.setupView(
-                    (Activity) getContext(), convertView, parent, item.getDescription(), itemState);
+            mBrowserAdapter.setCurrentState(mCurrentState);
+            mBrowserAdapter.setCurrentMetadata(mCurrentMetadata);
+            mBrowserAdapter.notifyItemChanged((int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_TRACK_NUMBER));
         }
     }
 
@@ -298,8 +231,7 @@ public class MainActivity extends AppCompatActivity
             final int state = mCurrentState == null ? PlaybackStateCompat.STATE_NONE : mCurrentState.getState();
             if (state == PlaybackState.STATE_PAUSED || state == PlaybackState.STATE_STOPPED || state == PlaybackState.STATE_NONE) {
                 if (mCurrentMetadata == null) {
-                    mCurrentMetadata = mMusicLibrary.getMetadata(MainActivity.this,
-                            Long.valueOf(mMusicLibrary.getMediaItems().get(0).getMediaId()));
+                    mCurrentMetadata = mMusicLibrary.getMetadata(Long.valueOf(mMusicLibrary.getMediaItems().get(0).getMediaId()));
                     updateMetadata(mCurrentMetadata);
                 }
                 MediaControllerCompat.getMediaController(MainActivity.this)
@@ -315,60 +247,30 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
-            drawer.closeDrawer(GravityCompat.START);
-        } else {
-            super.onBackPressed();
-        }
+        super.onBackPressed();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.activity_main_drawer, menu);
+        return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                ((DrawerLayout) findViewById(R.id.drawer_layout)).openDrawer(GravityCompat.START);  // OPEN DRAWER
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        // Handle action bar item clicks here. The action bar will
-//        // automatically handle clicks on the Home/Up button, so long
-//        // as you specify a parent activity in AndroidManifest.xml.
-//        int id = item.getItemId();
-//
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-    @SuppressWarnings("StatementWithEmptyBody")
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        switch (id) {
-            case R.id.nav_radio:
-                break;
-            case R.id.nav_station_manager:
-                Intent stationExplorer = new Intent(this, StationExplorerActivity.class);
-                startActivity(stationExplorer);
-                break;
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.nav_station_manager) {
+            Intent stationExplorer = new Intent(this, StationExplorerActivity.class);
+            startActivity(stationExplorer);
+            return true;
         }
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drawer.closeDrawer(GravityCompat.START);
-        return true;
+
+        return super.onOptionsItemSelected(item);
     }
 }

@@ -8,13 +8,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
-import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
+import androidx.media.session.MediaButtonReceiver;
 
 import com.prisyazhnuy.radioplayer.R;
 import com.prisyazhnuy.radioplayer.activities.MainActivity;
@@ -24,8 +25,8 @@ import com.prisyazhnuy.radioplayer.activities.MainActivity;
  */
 
 public class MediaNotificationManager {
-    private static final int NOTIFICATION_ID = 412;
-    private static final String CHANNEL_ID = "RadioPlayer";
+    private static final int NOTIFICATION_ID = 416;
+    private static final String CHANNEL_ID = "RadioPlayer.pro";
     private static final int REQUEST_CODE = 100;
     private final BackgroundAudioService mService;
 
@@ -37,8 +38,7 @@ public class MediaNotificationManager {
     private final NotificationCompat.Action mNextAction;
     private final NotificationCompat.Action mPrevAction;
 
-    private boolean mStarted;
-    private PendingIntent stopIntent;
+    private final PendingIntent stopIntent;
 
     public MediaNotificationManager(BackgroundAudioService service) {
         mService = service;
@@ -95,23 +95,19 @@ public class MediaNotificationManager {
         CharSequence title = description.getTitle();
         CharSequence subtitle = description.getSubtitle();
 
-        int backgroundColor = 0;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            backgroundColor = ContextCompat.getColor(mService, R.color.notification_bg);
-        } else {
-            backgroundColor = ContextCompat.getColor(mService, R.color.notification_bg_old);
-        }
+        int backgroundColor = ContextCompat.getColor(mService, R.color.notification_bg);
 
-        notificationBuilder.setStyle(new android.support.v4.media.app.NotificationCompat.MediaStyle()
-                .setMediaSession(token)
-                .setShowActionsInCompactView(0, 1, 2))
+        notificationBuilder
+                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
+                        .setMediaSession(token)
+                        .setShowActionsInCompactView(0, 1, 2)
+                )
                 .setColor(backgroundColor)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .setContentIntent(createContentIntent())
                 .setContentTitle(title)
                 .setContentText(subtitle)
-//                .setLargeIcon(bitmap)//MusicLibrary.getAlbumBitmap(mService, description.getMediaId()))
                 .setOngoing(isPlaying)
                 .setWhen(isPlaying ? System.currentTimeMillis() - state.getPosition() : 0)
                 .setShowWhen(isPlaying)
@@ -130,18 +126,18 @@ public class MediaNotificationManager {
             notificationBuilder.addAction(mNextAction);
         }
 
+        // If stop action is enabled
+        if ((state.getActions() & PlaybackStateCompat.ACTION_STOP) != 0) {
+            notificationBuilder.addAction(mStopAction);
+        }
+
         Notification notification = notificationBuilder.build();
 
-        if (isPlaying && !mStarted) {
-            mService.startService(new Intent(mService.getApplicationContext(), BackgroundAudioService.class));
+        if (isPlaying) {
+            ContextCompat.startForegroundService(mService, new Intent(mService.getApplicationContext(), BackgroundAudioService.class));
             mService.startForeground(NOTIFICATION_ID, notification);
-            mStarted = true;
         } else {
-            if (!isPlaying) {
-                mService.stopForeground(false);
-                mStarted = false;
-            }
-            ((NotificationManager) mService.getSystemService(Context.NOTIFICATION_SERVICE)).notify(NOTIFICATION_ID, notification);
+            mService.stopForeground(false);
         }
     }
 
@@ -149,15 +145,15 @@ public class MediaNotificationManager {
         Intent openUI = new Intent(mService, MainActivity.class);
         openUI.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         return PendingIntent.getActivity(
-                mService, REQUEST_CODE, openUI, PendingIntent.FLAG_CANCEL_CURRENT);
+                mService, REQUEST_CODE, openUI, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
     private void createNotificationChannel(String channelId, String channelName) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel chan = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_NONE);
-            chan.setLightColor(Color.BLUE);
-            chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
-            mNotificationManager.createNotificationChannel(chan);
+            NotificationChannel channel = new NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_NONE);
+            channel.setLightColor(Color.BLUE);
+            channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            mNotificationManager.createNotificationChannel(channel);
         }
     }
 }

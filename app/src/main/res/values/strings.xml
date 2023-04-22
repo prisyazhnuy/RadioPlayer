@@ -3,9 +3,6 @@
     <string name="station_name_label">Name:</string>
     <string name="station_url_label">URL:</string>
 
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-
     <string name="nav_radio">Radio</string>
     <string name="nav_manager">Station manager</string>
     <string name="action_add_station">Add</string>

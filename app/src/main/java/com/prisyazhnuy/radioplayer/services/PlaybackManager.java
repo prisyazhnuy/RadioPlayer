@@ -76,18 +76,15 @@ class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaP
             mCurrentMedia = metadata;
             try {
                 mMediaPlayer.setDataSource(mMusicLibrary.getSongUrl(Long.valueOf(mediaId)));
-                mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                    @Override
-                    public void onPrepared(MediaPlayer mp) {
-                        if (tryToGetAudioFocus()) {
-                            mStartPlayingTime = System.currentTimeMillis();
-                            mPlayOnFocusGain = false;
-                            mMediaPlayer.start();
-                            mState = PlaybackStateCompat.STATE_PLAYING;
-                            updatePlaybackState();
-                        } else {
-                            mPlayOnFocusGain = true;
-                        }
+                mMediaPlayer.setOnPreparedListener(mp -> {
+                    if (tryToGetAudioFocus()) {
+                        mStartPlayingTime = System.currentTimeMillis();
+                        mPlayOnFocusGain = false;
+                        mMediaPlayer.start();
+                        mState = PlaybackStateCompat.STATE_PLAYING;
+                        updatePlaybackState();
+                    } else {
+                        mPlayOnFocusGain = true;
                     }
                 });
                 mMediaPlayer.prepareAsync();
@@ -96,6 +93,10 @@ class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaP
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        } else {
+            mMediaPlayer.start();
+            mState = PlaybackStateCompat.STATE_PLAYING;
+            updatePlaybackState();
         }
     }
 
@@ -111,19 +112,16 @@ class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaP
     void pause() {
         if (isPlaying()) {
             storeTime();
-//            mMediaPlayer.pause();
-            mMediaPlayer.stop();
+            mMediaPlayer.pause();
             mAudioManager.abandonAudioFocus(this);
         }
         mState = PlaybackStateCompat.STATE_PAUSED;
-//        mState = PlaybackStateCompat.STATE_STOPPED;
         updatePlaybackState();
-        releaseMediaPlayer();
     }
 
     void stop() {
         storeTime();
-        mState = PlaybackStateCompat.STATE_STOPPED;
+        mState = PlaybackStateCompat.STATE_PAUSED;
         updatePlaybackState();
         // Give up Audio focus
         mAudioManager.abandonAudioFocus(this);
@@ -204,7 +202,8 @@ class PlaybackManager implements AudioManager.OnAudioFocusChangeListener, MediaP
                 | PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID
                 | PlaybackStateCompat.ACTION_PLAY_FROM_SEARCH
                 | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS;
+                | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                | PlaybackStateCompat.ACTION_STOP;
         if (isPlaying()) {
             actions |= PlaybackStateCompat.ACTION_PAUSE;
         }
