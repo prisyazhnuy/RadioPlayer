@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Radio Player</string>
+    <string name="app_name">Digital Radio</string>
     <string name="station_name_label">Name:</string>
     <string name="station_url_label">URL:</string>
 
@@ -16,4 +16,6 @@
     <string name="toolbar_edit_station">Edit station</string>
     <string name="btn_add">Add</string>
     <string name="toolbar_create_station">Create station</string>
+    <string name="play_shortcut_short_label">Play</string>
+    <string name="play_shortcut_long_label">Play latest station</string>
 </resources>

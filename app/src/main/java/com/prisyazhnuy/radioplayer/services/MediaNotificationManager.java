@@ -12,6 +12,7 @@ import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
+import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
@@ -77,8 +78,8 @@ public class MediaNotificationManager {
     }
 
     public void update(MediaMetadataCompat metadata, PlaybackStateCompat state, MediaSessionCompat.Token token) {
-
-        if (state == null || state.getState() == PlaybackStateCompat.STATE_STOPPED || state.getState() == PlaybackStateCompat.STATE_NONE) {
+        Log.e(CHANNEL_ID, "state = " + state);
+        if (state == null || state.getState() == PlaybackStateCompat.STATE_STOPPED) {
             mService.stopForeground(true);
             mService.stopSelf();
             return;
@@ -87,7 +88,7 @@ public class MediaNotificationManager {
             return;
         }
         int playbackState = state.getState();
-        boolean isPlaying = playbackState == PlaybackStateCompat.STATE_PLAYING || playbackState == PlaybackStateCompat.STATE_BUFFERING;
+        boolean isPlaying = playbackState == PlaybackStateCompat.STATE_CONNECTING || playbackState == PlaybackStateCompat.STATE_PLAYING || playbackState == PlaybackStateCompat.STATE_BUFFERING;
         createNotificationChannel(CHANNEL_ID, "My Background Service");
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mService, CHANNEL_ID);
         MediaDescriptionCompat description = metadata.getDescription();
@@ -136,6 +137,7 @@ public class MediaNotificationManager {
         if (isPlaying) {
             ContextCompat.startForegroundService(mService, new Intent(mService.getApplicationContext(), BackgroundAudioService.class));
             mService.startForeground(NOTIFICATION_ID, notification);
+            mNotificationManager.notify(NOTIFICATION_ID, notification);
         } else {
             mService.stopForeground(false);
         }

@@ -154,6 +154,17 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        String shortcutType = intent.getStringExtra("shortcut_id");
+        Log.e("TAG", "shortcut = " + shortcutType);
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
         mMusicLibrary.updateLibrary().subscribe(aBoolean -> {
